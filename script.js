@@ -451,6 +451,19 @@ class NeuralNetwork {
   }
 
   selectNode(node) {
+    // Immediately reset visuals on the previously selected node
+    if (this.selectedNode && this.selectedNode !== node) {
+      const prev = this.selectedNode;
+      prev.selected = false;
+      prev.glowIntensity = 0;
+      prev.radius = prev.baseRadius;
+      // Also reset connected synapses
+      this.synapses.forEach(s => {
+        if (s.nodeA === prev || s.nodeB === prev) {
+          s.strength = 0.3;
+        }
+      });
+    }
     this.selectedNode = node;
     node.selected = true;
     openCaseStudy(node.data);
