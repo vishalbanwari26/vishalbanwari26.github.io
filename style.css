@@ -208,10 +208,12 @@ img { max-width: 100%; display: block; }
   letter-spacing: -0.02em;
 }
 
-.nav-logo-icon {
-  color: var(--neural-cyan);
-  font-size: 1.4rem;
-  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.5));
+.nav-logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+  filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
 }
 
 .nav-links {
@@ -536,7 +538,8 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   overflow: hidden;
-  background: rgba(6, 6, 15, 0.8);
+  background: rgba(6, 6, 15, 0.92);
+  z-index: 5;
 }
 
 .network-canvas {
@@ -620,6 +623,22 @@ img { max-width: 100%; display: block; }
 .case-study.open {
   right: 0;
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+}
+
+.case-study-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1999;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  cursor: pointer;
+}
+
+.case-study-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .case-study-close {
@@ -915,7 +934,7 @@ img { max-width: 100%; display: block; }
    ======================================== */
 .publication-section {
   padding: var(--section-padding) 2rem;
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 .publication-card {
@@ -987,7 +1006,7 @@ img { max-width: 100%; display: block; }
    ======================================== */
 .skills-section {
   padding: var(--section-padding) 2rem;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .skills-grid {
@@ -1053,7 +1072,7 @@ img { max-width: 100%; display: block; }
    ======================================== */
 .beyond-section {
   padding: var(--section-padding) 2rem;
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 .hobbies-grid {
@@ -1098,7 +1117,7 @@ img { max-width: 100%; display: block; }
   padding: var(--section-padding) 2rem;
   position: relative;
   overflow: hidden;
-  background: var(--bg-primary);
+  background: transparent;
   min-height: 60vh;
   display: flex;
   align-items: center;
@@ -1183,7 +1202,7 @@ img { max-width: 100%; display: block; }
   font-size: 0.8rem;
   color: var(--text-muted);
   border-top: 1px solid var(--glass-border);
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 /* ========================================
@@ -1276,3 +1295,159 @@ img { max-width: 100%; display: block; }
     flex-direction: column;
   }
 }
+
+/* ========================================
+   CRAZY 3D REDESIGN STYLES
+   ======================================== */
+
+/* Custom Cursor */
+body, a, button, canvas, .glass-card {
+  cursor: none !important;
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 6px; height: 6px;
+  background: var(--neural-cyan);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px var(--neural-cyan);
+  transition: width 0.2s, height 0.2s, background-color 0.2s;
+}
+
+.cursor-outline {
+  position: fixed;
+  top: 0; left: 0;
+  width: 40px; height: 40px;
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, border-color 0.2s;
+}
+
+.cursor-hover .cursor-dot {
+  background: transparent;
+  box-shadow: none;
+}
+
+.cursor-hover .cursor-outline {
+  width: 60px;
+  height: 60px;
+  border-color: var(--neural-purple);
+  background: rgba(139, 92, 246, 0.1);
+  backdrop-filter: blur(2px);
+}
+
+/* Background Animated Gradient Orbs */
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  z-index: -2;
+  opacity: 0.15;
+  animation: floatOrb 25s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.orb-1 {
+  top: -10%; left: -10%; width: 50vw; height: 50vw;
+  background: var(--neural-cyan);
+  animation-duration: 20s;
+}
+.orb-2 {
+  bottom: -20%; right: -10%; width: 60vw; height: 60vw;
+  background: var(--neural-purple);
+  animation-duration: 30s;
+}
+.orb-3 {
+  top: 40%; left: 30%; width: 40vw; height: 40vw;
+  background: var(--neural-pink);
+  animation-duration: 25s;
+  animation-delay: -5s;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10vw, 5vh) scale(1.1); }
+  100% { transform: translate(-5vw, -5vh) scale(0.9); }
+}
+
+#three-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+}
+#three-container canvas {
+  display: block;
+  pointer-events: auto;
+}
+
+/* Make backgrounds transparent so Three.js shines through */
+body {
+  background: transparent;
+  background-color: #030308; /* Extremely dark blue/black fallback */
+}
+.hero-section,
+.experience-section,
+.network-section,
+.publication-section,
+.skills-section,
+.beyond-section,
+.contact-section,
+.footer {
+  background: transparent !important;
+}
+
+/* Scramble Text Effect */
+.scramble-text {
+  position: relative;
+}
+
+/* Reveal Overrides (handled by GSAP now) */
+.reveal, .hero-badge, .hero-title-line, .hero-title-accent, .hero-tagline, .hero-subtitle, .hero-cta, .hero-scroll-hint {
+  opacity: 1; /* Resetting basic CSS animations to let GSAP handle it */
+  animation: none !important;
+}
+
+/* Fix z-indexes for elements */
+nav {
+  position: relative;
+  z-index: 100;
+}
+section, footer {
+  position: relative;
+  z-index: 2;
+  pointer-events: none; /* Let Three.js get mouse events */
+}
+/* But re-enable pointer events on actual content */
+section *, footer * {
+  pointer-events: auto;
+}
+/* Network container has its own canvas now — needs pointer events */
+.network-container {
+  pointer-events: auto;
+}
+.network-legend, .network-hint {
+  pointer-events: auto;
+}
+
+/* Magnetic Items */
+.magnetic {
+  display: inline-block;
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 3D Glass Cards (VanillaTilt) */
+.glass-card {
+  transform-style: preserve-3d;
+}
+.glass-card > * {
+  transform: translateZ(20px);
+}
+

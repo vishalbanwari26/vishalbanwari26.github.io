@@ -11,9 +11,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- GSAP & ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <!-- VanillaTilt -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-outline" id="cursor-outline"></div>
+
+  <!-- Background Orbs -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- Neural Space (Three.js Container) -->
+  <div id="three-container"></div>
+
   <!-- Loading Screen -->
   <div id="loader" class="loader">
     <div class="loader-brain">
@@ -33,8 +52,7 @@
   <!-- Navigation -->
   <nav id="nav" class="nav">
     <a href="#hero" class="nav-logo">
-      <span class="nav-logo-icon">⬡</span>
-      <span class="nav-logo-text">VB</span>
+      <img src="vb-logo.png" alt="VB Logo" class="nav-logo-img" />
     </a>
     <div class="nav-links" id="navLinks">
       <a href="#network" class="nav-link" data-section="network">Neural Map</a>
@@ -50,7 +68,6 @@
 
   <!-- Hero Section -->
   <section id="hero" class="hero">
-    <canvas id="heroCanvas" class="hero-canvas"></canvas>
     <div class="hero-content">
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
@@ -82,7 +99,7 @@
       <h2 class="section-title">My Neural Network</h2>
       <p class="section-desc">Each node represents a project or skill. Connections show technologies used together.<br />Click any node to explore details. Watch the network think.</p>
     </div>
-    <div class="network-container">
+    <div class="network-container" id="networkContainer">
       <canvas id="networkCanvas" class="network-canvas"></canvas>
       <div class="network-legend">
         <div class="legend-item"><span class="legend-dot legend-project"></span> Project</div>
@@ -316,7 +333,6 @@
         </div>
       </div>
     </div>
-    <canvas id="contactCanvas" class="contact-canvas"></canvas>
   </section>
 
   <!-- Footer -->
