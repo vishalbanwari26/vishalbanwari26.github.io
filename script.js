@@ -496,9 +496,9 @@ function layoutNetworkNodes() {
   const cx = W / 2;
   const cy = H / 2;
 
-  // Place domains at the center in a ring
+  // Place domains at the center in a small ring
   const domains = networkNodes.filter(n => n.data.type === 'category');
-  const domainRadius = Math.min(W, H) * 0.12;
+  const domainRadius = Math.min(W, H) * 0.10;
   domains.forEach((d, i) => {
     const angle = (i / domains.length) * Math.PI * 2 - Math.PI / 2;
     d.targetX = cx + Math.cos(angle) * domainRadius;
@@ -507,9 +507,9 @@ function layoutNetworkNodes() {
     d.y = d.targetY;
   });
 
-  // Place projects in outer ring, grouped by domain
+  // Place projects in a wide outer ring, grouped by domain
   const projects = networkNodes.filter(n => n.data.type === 'project');
-  const projectRadius = Math.min(W, H) * 0.32;
+  const projectRadius = Math.min(W * 0.42, H * 0.38);
   const domainLabelMap = { 'NLP': 'domain-nlp', 'Computer Vision': 'domain-cv', 'Deep Learning': 'domain-dl', 'Research': 'domain-research' };
 
   // Group projects by domain
@@ -523,7 +523,7 @@ function layoutNetworkNodes() {
   domains.forEach((d, dIdx) => {
     const baseAngle = (dIdx / domains.length) * Math.PI * 2 - Math.PI / 2;
     const projs = grouped[d.data.id] || [];
-    const spread = Math.PI * 0.4; // Spread angle for projects around their domain
+    const spread = Math.PI * 0.55; // Wider spread so projects don't pile up
     projs.forEach((p, pIdx) => {
       const angle = baseAngle + (pIdx - (projs.length - 1) / 2) * (spread / Math.max(projs.length - 1, 1));
       p.targetX = cx + Math.cos(angle) * projectRadius;
@@ -533,9 +533,9 @@ function layoutNetworkNodes() {
     });
   });
 
-  // Place skills in outermost ring
+  // Place skills in outermost ring — use full canvas width
   const skills = networkNodes.filter(n => n.data.type === 'skill');
-  const skillRadius = Math.min(W, H) * 0.44;
+  const skillRadius = Math.min(W * 0.47, H * 0.46);
   skills.forEach((s, i) => {
     const angle = (i / skills.length) * Math.PI * 2 - Math.PI / 4;
     s.targetX = cx + Math.cos(angle) * skillRadius;
@@ -727,16 +727,6 @@ function onNetworkMouseMove(e) {
 
   networkHovered = found;
   networkCanvas.style.cursor = found ? 'pointer' : 'default';
-
-  // Update hint
-  const hint = document.getElementById('networkHint');
-  if (hint) {
-    if (found) {
-      hint.innerHTML = '<span class="hint-icon">\u{1F680}</span> <b>' + found.data.label + '</b> — Click to explore';
-    } else {
-      hint.innerHTML = '<span class="hint-icon">\u{1F446}</span> Hover a node to explore';
-    }
-  }
 }
 
 function onNetworkClick(e) {

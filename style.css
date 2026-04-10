@@ -532,13 +532,12 @@ img { max-width: 100%; display: block; }
 .network-container {
   position: relative;
   width: 100%;
-  max-width: 1200px;
-  height: 600px;
+  max-width: 1400px;
+  height: 720px;
   margin: 0 auto;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
-  overflow: hidden;
-  background: rgba(6, 6, 15, 0.92);
+  overflow: visible;
+  background: transparent;
   z-index: 5;
 }
 
