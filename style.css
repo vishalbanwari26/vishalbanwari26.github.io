@@ -938,7 +938,7 @@ img { max-width: 100%; display: block; }
 
 .publication-card {
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
   padding: 2.5rem;
   position: relative;
   overflow: hidden;
