@@ -358,29 +358,40 @@ window.addEventListener('load', function() {
   const canvas = document.getElementById('ropes-canvas');
   if (!canvas) return;
 
-  const ctx = canvas.getContext('2d');
-  const LABELS  = ['Nature lover', 'AI engineer', 'Lifemaxxing'];
-  const COLORS  = ['#00d4ff', '#ff6b35', '#8b5cf6']; // cyan, orange, purple
-  const SEGS    = 16;
-  const GRAVITY = 0.5;
-  const DAMPING = 0.982;
-  const ITERS   = 40;
+  const ctx    = canvas.getContext('2d');
+  const DPR    = window.devicePixelRatio || 1;
+  const LABELS = ['Nature lover', 'AI engineer', 'Lifemaxxing'];
+  const COLORS = ['#00d4ff', '#ff6b35', '#8b5cf6'];
+  const SEGS   = 14;
+  const GRAV   = 0.55;
+  const DAMP   = 0.96;   // higher = settles faster
+  const ITERS  = 30;
+  const SLEEP  = 0.08;   // velocity threshold to stop loop
+
   let W, H, segLen, anchors;
   let dragging = null;
+  let rafId    = null;
+  let sleeping = false;
 
-  // Each rope: array of {x,y,ox,oy}
   const ropes = LABELS.map(() => []);
 
   function resize() {
     W = window.innerWidth;
     H = window.innerHeight;
-    canvas.width  = W;
-    canvas.height = H;
-    segLen = (H * 0.65) / SEGS;
-    // anchor ropes in the right 40% of the full canvas
-    const rx = W * 0.60;
-    anchors = [rx + W*0.08, rx + W*0.18, rx + W*0.28];
-    // init / reset rope points
+    // set canvas buffer in physical pixels, scale ctx so coords are CSS px
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    segLen = (H * 0.62) / SEGS;
+
+    // three anchors evenly spaced across the right 28% of the page
+    const base = W * 0.73;
+    const gap  = W * 0.09;
+    anchors = [base, base + gap, base + gap * 2];
+
     ropes.forEach((pts, ri) => {
       pts.length = 0;
       const ax = anchors[ri];
@@ -391,52 +402,69 @@ window.addEventListener('load', function() {
   }
 
   function constrain(pts, ax) {
-    for (let iter = 0; iter < ITERS; iter++) {
-      // lock anchor
+    for (let it = 0; it < ITERS; it++) {
       pts[0].x = ax; pts[0].y = 0;
       for (let i = 0; i < SEGS; i++) {
         const a = pts[i], b = pts[i + 1];
         const dx = b.x - a.x, dy = b.y - a.y;
-        const dist = Math.sqrt(dx*dx + dy*dy) || 0.001;
-        const diff = (dist - segLen) / dist * 0.5;
-        if (!a.pinned) { a.x += dx * diff; a.y += dy * diff; }
-        if (!b.pinned) { b.x -= dx * diff; b.y -= dy * diff; }
+        const d  = Math.sqrt(dx*dx + dy*dy) || 0.001;
+        const f  = (d - segLen) / d * 0.5;
+        if (!a.pinned) { a.x += dx*f; a.y += dy*f; }
+        if (!b.pinned) { b.x -= dx*f; b.y -= dy*f; }
       }
       pts[0].x = ax; pts[0].y = 0;
     }
+  }
+
+  function totalEnergy() {
+    let e = 0;
+    ropes.forEach(pts => pts.forEach(p => {
+      if (p.pinned) return;
+      e += Math.abs(p.x - p.ox) + Math.abs(p.y - p.oy);
+    }));
+    return e;
   }
 
   function tick() {
     ropes.forEach(pts => {
       pts.forEach(p => {
         if (p.pinned) return;
-        const vx = (p.x - p.ox) * DAMPING;
-        const vy = (p.y - p.oy) * DAMPING;
+        const vx = (p.x - p.ox) * DAMP;
+        const vy = (p.y - p.oy) * DAMP;
         p.ox = p.x; p.oy = p.y;
         p.x += vx;
-        p.y += vy + GRAVITY;
+        p.y += vy + GRAV;
       });
     });
     ropes.forEach((pts, ri) => constrain(pts, anchors[ri]));
   }
 
-  function hexToRgba(hex, a) {
+  function rgba(hex, a) {
     const r = parseInt(hex.slice(1,3),16);
     const g = parseInt(hex.slice(3,5),16);
     const b = parseInt(hex.slice(5,7),16);
     return `rgba(${r},${g},${b},${a})`;
   }
 
-  function draw() {
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const tagBg  = isDark ? '#0e0e0e' : '#ffffff';
+  function drawRoundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y); ctx.arcTo(x+w,y, x+w,y+r, r);
+    ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w,y+h, x+w-r,y+h, r);
+    ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h, x,y+h-r, r);
+    ctx.lineTo(x, y+r); ctx.arcTo(x,y, x+r,y, r);
+    ctx.closePath();
+  }
 
+  function draw() {
     ctx.clearRect(0, 0, W, H);
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const tagBg  = isDark ? '#0a0a0a' : '#ffffff';
 
     ropes.forEach((pts, ri) => {
       const col = COLORS[ri];
 
-      // rope glow (thick, faint)
+      // glow pass
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 0; i < SEGS - 1; i++) {
@@ -445,12 +473,11 @@ window.addEventListener('load', function() {
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
       }
       ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = hexToRgba(col, 0.12);
-      ctx.lineWidth   = 8;
-      ctx.lineCap     = 'round';
+      ctx.strokeStyle = rgba(col, 0.13);
+      ctx.lineWidth = 10; ctx.lineCap = 'round';
       ctx.stroke();
 
-      // rope core (sharp)
+      // core pass
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 0; i < SEGS - 1; i++) {
@@ -459,123 +486,97 @@ window.addEventListener('load', function() {
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
       }
       ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = hexToRgba(col, 0.7);
-      ctx.lineWidth   = 1.5;
+      ctx.strokeStyle = rgba(col, 0.75);
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // pin dot at top
+      // pin
       ctx.beginPath();
-      ctx.arc(pts[0].x, 2, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = col;
-      ctx.fill();
+      ctx.arc(pts[0].x, 3, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = col; ctx.fill();
 
       // label tag
       const tip = pts[SEGS];
       const label = LABELS[ri];
-      ctx.font = '600 9px "JetBrains Mono", monospace';
+      ctx.font = '600 9px "JetBrains Mono",monospace';
       ctx.textAlign = 'center';
-      const tw = ctx.measureText(label).width;
-      const pw = tw + 18, ph = 20, pr = 3;
-      const tx = tip.x, ty = tip.y + 4;
-      const x0 = tx - pw/2, y0 = ty;
+      const tw = ctx.measureText(label.toUpperCase()).width;
+      const pw = tw+20, ph=20, pr=3;
+      const tx = tip.x, ty = tip.y + 6;
 
-      // tag bg
-      ctx.beginPath();
-      ctx.moveTo(x0 + pr, y0);
-      ctx.lineTo(x0 + pw - pr, y0);
-      ctx.arcTo(x0 + pw, y0, x0 + pw, y0 + pr, pr);
-      ctx.lineTo(x0 + pw, y0 + ph - pr);
-      ctx.arcTo(x0 + pw, y0 + ph, x0 + pw - pr, y0 + ph, pr);
-      ctx.lineTo(x0 + pr, y0 + ph);
-      ctx.arcTo(x0, y0 + ph, x0, y0 + ph - pr, pr);
-      ctx.lineTo(x0, y0 + pr);
-      ctx.arcTo(x0, y0, x0 + pr, y0, pr);
-      ctx.closePath();
-      ctx.fillStyle = tagBg;
-      ctx.fill();
-      ctx.strokeStyle = hexToRgba(col, 0.5);
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // tag text
+      drawRoundRect(tx-pw/2, ty, pw, ph, pr);
+      ctx.fillStyle = tagBg; ctx.fill();
+      ctx.strokeStyle = rgba(col, 0.55); ctx.lineWidth=1; ctx.stroke();
       ctx.fillStyle = col;
-      ctx.fillText(label.toUpperCase(), tx, ty + 13.5);
+      ctx.fillText(label.toUpperCase(), tx, ty+14);
     });
   }
 
   function loop() {
     tick();
     draw();
-    requestAnimationFrame(loop);
+    if (!dragging && totalEnergy() < SLEEP) {
+      sleeping = true;
+      rafId = null;
+      return; // stop the loop — ropes are static
+    }
+    rafId = requestAnimationFrame(loop);
   }
 
-  // nudge ropes on load for natural sway
-  function nudge() {
-    ropes.forEach((pts, ri) => {
-      const dir = ri === 1 ? -1 : 1;
-      for (let i = 3; i <= SEGS; i++) {
-        pts[i].x += dir * (i / SEGS) * 12;
-      }
-    });
+  function wake() {
+    if (sleeping) { sleeping = false; rafId = requestAnimationFrame(loop); }
+    else if (!rafId) { rafId = requestAnimationFrame(loop); }
   }
 
-  // drag interaction
-  function getCanvasPos(e) {
-    const r = canvas.getBoundingClientRect();
-    return {
-      cx: (e.touches ? e.touches[0].clientX : e.clientX) - r.left,
-      cy: (e.touches ? e.touches[0].clientY : e.clientY) - r.top
-    };
+  // mouse / touch drag via window
+  function clientPos(e) {
+    return { cx: e.touches ? e.touches[0].clientX : e.clientX,
+             cy: e.touches ? e.touches[0].clientY : e.clientY };
   }
 
-  // drag via window (canvas is pointer-events:none so hero links still work)
   window.addEventListener('mousedown', e => {
-    const { cx, cy } = getCanvasPos(e);
-    let best = 36, found = null;
-    ropes.forEach((pts, ri) => {
-      pts.forEach((p, pi) => {
-        if (pi === 0) return;
-        const d = Math.hypot(p.x - cx, p.y - cy);
-        if (d < best) { best = d; found = { ri, pi }; }
-      });
-    });
-    if (found) { dragging = found; e.preventDefault(); }
+    const { cx, cy } = clientPos(e);
+    let best = 40, found = null;
+    ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
+      if (pi === 0) return;
+      const d = Math.hypot(p.x-cx, p.y-cy);
+      if (d < best) { best=d; found={ri,pi}; }
+    }));
+    if (found) { dragging=found; wake(); e.preventDefault(); }
   }, { passive: false });
 
   window.addEventListener('touchstart', e => {
-    const { cx, cy } = getCanvasPos(e);
-    let best = 44, found = null;
-    ropes.forEach((pts, ri) => {
-      pts.forEach((p, pi) => {
-        if (pi === 0) return;
-        const d = Math.hypot(p.x - cx, p.y - cy);
-        if (d < best) { best = d; found = { ri, pi }; }
-      });
-    });
-    if (found) { dragging = found; e.preventDefault(); }
+    const { cx, cy } = clientPos(e);
+    let best = 50, found = null;
+    ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
+      if (pi === 0) return;
+      const d = Math.hypot(p.x-cx, p.y-cy);
+      if (d < best) { best=d; found={ri,pi}; }
+    }));
+    if (found) { dragging=found; wake(); e.preventDefault(); }
   }, { passive: false });
 
   window.addEventListener('mousemove', e => {
     if (!dragging) return;
-    const { cx, cy } = getCanvasPos(e);
+    const { cx, cy } = clientPos(e);
     const p = ropes[dragging.ri][dragging.pi];
-    p.ox = p.x; p.oy = p.y; p.x = cx; p.y = cy;
-    e.preventDefault();
-  }, { passive: false });
+    p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
+  });
 
   window.addEventListener('touchmove', e => {
     if (!dragging) return;
-    const { cx, cy } = getCanvasPos(e);
+    const { cx, cy } = clientPos(e);
     const p = ropes[dragging.ri][dragging.pi];
-    p.ox = p.x; p.oy = p.y; p.x = cx; p.y = cy;
+    p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
     e.preventDefault();
   }, { passive: false });
 
-  window.addEventListener('mouseup',  () => { dragging = null; });
-  window.addEventListener('touchend', () => { dragging = null; });
+  window.addEventListener('mouseup',  () => { dragging=null; });
+  window.addEventListener('touchend', () => { dragging=null; });
 
   resize();
-  window.addEventListener('resize', resize);
-  setTimeout(nudge, 300);
-  loop();
+  window.addEventListener('resize', () => { resize(); wake(); });
+
+  // draw initial static frame (no animation until dragged)
+  draw();
 });
