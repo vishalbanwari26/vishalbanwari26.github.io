@@ -362,13 +362,16 @@ window.addEventListener('load', function() {
 
   const ctx = canvas.getContext('2d');
   const LABELS  = ['Nature lover', 'AI engineer', 'Lifemaxxing'];
+  const COLORS  = ['#00d4ff', '#ff6b35', '#8b5cf6']; // cyan, orange, purple
   const SEGS    = 16;
   const GRAVITY = 0.5;
   const DAMPING = 0.982;
   const ITERS   = 40;
+  const WAVE_AMP   = 5;    // idle sway amplitude (px)
+  const WAVE_SPEED = 0.012; // idle sway speed
 
-  let W, H, segLen, anchors;
-  let dragging = null; // { ropeIdx, ptIdx }
+  let W, H, segLen, anchors, t = 0;
+  let dragging = null;
 
   // Each rope: array of {x,y,ox,oy}
   const ropes = LABELS.map(() => []);
@@ -409,29 +412,40 @@ window.addEventListener('load', function() {
   }
 
   function tick() {
-    ropes.forEach(pts => {
-      pts.forEach(p => {
+    t += WAVE_SPEED;
+    ropes.forEach((pts, ri) => {
+      pts.forEach((p, pi) => {
         if (p.pinned) return;
         const vx = (p.x - p.ox) * DAMPING;
         const vy = (p.y - p.oy) * DAMPING;
         p.ox = p.x; p.oy = p.y;
-        p.x += vx; p.y += vy + GRAVITY;
+        // idle sine wave — only nudge slightly if not being dragged
+        const idleX = dragging && dragging.ri === ri ? 0
+          : Math.sin(t + ri * 1.8 + pi * 0.3) * WAVE_AMP * (pi / SEGS) * 0.06;
+        p.x += vx + idleX;
+        p.y += vy + GRAVITY;
       });
     });
     ropes.forEach((pts, ri) => constrain(pts, anchors[ri]));
   }
 
+  function hexToRgba(hex, a) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
   function draw() {
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const ropeColor = isDark ? '#3a3a3a' : '#b4b2a9';
-    const tagBg     = isDark ? '#131313' : '#ffffff';
-    const tagBorder = isDark ? '#2e2e2e' : '#e4e3df';
-    const tagText   = isDark ? '#686868' : '#5a5a54';
+    const tagBg  = isDark ? '#0e0e0e' : '#ffffff';
 
     ctx.clearRect(0, 0, W, H);
 
     ropes.forEach((pts, ri) => {
-      // rope stroke — smooth quadratic bezier through midpoints
+      const col = COLORS[ri];
+
+      // rope glow (thick, faint)
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 0; i < SEGS - 1; i++) {
@@ -440,29 +454,41 @@ window.addEventListener('load', function() {
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
       }
       ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = ropeColor;
-      ctx.lineWidth   = 1.8;
+      ctx.strokeStyle = hexToRgba(col, 0.12);
+      ctx.lineWidth   = 8;
       ctx.lineCap     = 'round';
-      ctx.lineJoin    = 'round';
       ctx.stroke();
 
-      // orange pin dot at top
+      // rope core (sharp)
       ctx.beginPath();
-      ctx.arc(pts[0].x, 0, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff6b35';
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < SEGS - 1; i++) {
+        const mx = (pts[i].x + pts[i+1].x) / 2;
+        const my = (pts[i].y + pts[i+1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+      }
+      ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
+      ctx.strokeStyle = hexToRgba(col, 0.7);
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+
+      // pin dot at top
+      ctx.beginPath();
+      ctx.arc(pts[0].x, 2, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = col;
       ctx.fill();
 
-      // label tag at rope end
+      // label tag
       const tip = pts[SEGS];
       const label = LABELS[ri];
-      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.font = '600 9px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       const tw = ctx.measureText(label).width;
-      const pw = tw + 20, ph = 22, pr = 2;
-      const tx = tip.x, ty = tip.y + 2;
-
-      // tag background (manual rounded rect for compatibility)
+      const pw = tw + 18, ph = 20, pr = 3;
+      const tx = tip.x, ty = tip.y + 4;
       const x0 = tx - pw/2, y0 = ty;
+
+      // tag bg
       ctx.beginPath();
       ctx.moveTo(x0 + pr, y0);
       ctx.lineTo(x0 + pw - pr, y0);
@@ -476,13 +502,13 @@ window.addEventListener('load', function() {
       ctx.closePath();
       ctx.fillStyle = tagBg;
       ctx.fill();
-      ctx.strokeStyle = tagBorder;
+      ctx.strokeStyle = hexToRgba(col, 0.5);
       ctx.lineWidth = 1;
       ctx.stroke();
 
       // tag text
-      ctx.fillStyle = tagText;
-      ctx.fillText(label.toUpperCase(), tx, ty + 15);
+      ctx.fillStyle = col;
+      ctx.fillText(label.toUpperCase(), tx, ty + 13.5);
     });
   }
 

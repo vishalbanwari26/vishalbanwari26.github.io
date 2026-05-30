@@ -63,7 +63,7 @@
 
   <!-- Hero Section -->
   <section id="hero" class="hero">
-    <canvas id="ropes-canvas" aria-hidden="true" style="position:absolute;top:0;right:0;width:40%;height:100%;z-index:1;pointer-events:auto;cursor:grab;display:block;"></canvas>
+    <canvas id="ropes-canvas" aria-hidden="true" style="position:absolute;top:0;right:0;width:40%;height:100%;z-index:10;pointer-events:auto;cursor:grab;display:block;"></canvas>
     <div class="hero-content">
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
@@ -312,54 +312,51 @@
       <h2 class="section-title">Publications</h2>
     </div>
 
-    <div class="pub-list">
+    <div class="pub-grid">
 
-      <a href="https://arxiv.org/abs/2603.15699" target="_blank" rel="noopener" class="pub-row reveal">
-        <div class="pub-row-num">01</div>
-        <div class="pub-row-body">
-          <div class="pub-row-meta">
-            <span class="pub-venue-badge">arXiv · 2025</span>
-            <span class="pub-type-pill">Preprint</span>
-          </div>
-          <h3 class="pub-row-title">This Is Taking Too Long — Investigating Time as a Proxy for Energy Consumption of LLMs</h3>
-          <p class="pub-row-abstract">Inference time as a proxy for API-based LLM energy costs — shows time measurements allow inferring GPU models, grounding energy cost estimations for end users.</p>
-          <div class="pub-row-tags">
-            <span>Inference time</span><span>Energy proxy</span><span>API transparency</span>
-          </div>
+      <a href="https://arxiv.org/abs/2603.15699" target="_blank" rel="noopener" class="pub-card reveal">
+        <div class="pub-card-top">
+          <span class="pub-card-num">01</span>
+          <span class="pub-card-venue">arXiv · 2025</span>
         </div>
-        <div class="pub-row-arrow">↗</div>
+        <h3 class="pub-card-title">This Is Taking Too Long — Time as a Proxy for LLM Energy Consumption</h3>
+        <div class="pub-card-tags">
+          <span>LLM energy</span><span>Inference time</span><span>API</span>
+        </div>
+        <div class="pub-card-footer">
+          <span class="pub-card-type">Preprint</span>
+          <span class="pub-card-link">Read ↗</span>
+        </div>
       </a>
 
-      <a href="https://arxiv.org/abs/2511.04481" target="_blank" rel="noopener" class="pub-row reveal">
-        <div class="pub-row-num">02</div>
-        <div class="pub-row-body">
-          <div class="pub-row-meta">
-            <span class="pub-venue-badge">AAAI Workshop · 2025</span>
-            <span class="pub-type-pill">Workshop</span>
-          </div>
-          <h3 class="pub-row-title">Promoting Sustainable Web Agents: Benchmarking and Estimating Energy Consumption</h3>
-          <p class="pub-row-abstract">Energy and CO₂ costs of web agents (OpenAI Operator, Google Mariner) — shows agent design philosophy severely impacts energy use, independent of task performance.</p>
-          <div class="pub-row-tags">
-            <span>Web agents</span><span>CO₂ benchmarking</span><span>Sustainability</span>
-          </div>
+      <a href="https://arxiv.org/abs/2511.04481" target="_blank" rel="noopener" class="pub-card reveal">
+        <div class="pub-card-top">
+          <span class="pub-card-num">02</span>
+          <span class="pub-card-venue">AAAI · 2025</span>
         </div>
-        <div class="pub-row-arrow">↗</div>
+        <h3 class="pub-card-title">Sustainable Web Agents: Benchmarking Energy Consumption</h3>
+        <div class="pub-card-tags">
+          <span>Web agents</span><span>CO₂</span><span>Sustainability</span>
+        </div>
+        <div class="pub-card-footer">
+          <span class="pub-card-type">Workshop</span>
+          <span class="pub-card-link">Read ↗</span>
+        </div>
       </a>
 
-      <a href="https://www.arxiv.org/pdf/2505.06325" target="_blank" rel="noopener" class="pub-row pub-row-featured reveal">
-        <div class="pub-row-num">03</div>
-        <div class="pub-row-body">
-          <div class="pub-row-meta">
-            <span class="pub-venue-badge">HHAI · May 2025</span>
-            <span class="pub-type-pill pub-type-conf">Conference</span>
-          </div>
-          <h3 class="pub-row-title">Human in the Latent Loop (HILL): Interactively Guiding Model Training Through Human Intuition</h3>
-          <p class="pub-row-abstract">HILL lets users reshape latent space representations during training via a distillation-inspired approach — treating the user-shaped space as a teacher signal for improved generalization.</p>
-          <div class="pub-row-tags">
-            <span>Latent guidance</span><span>Human-in-the-loop</span><span>Distillation</span>
-          </div>
+      <a href="https://www.arxiv.org/pdf/2505.06325" target="_blank" rel="noopener" class="pub-card pub-card-featured reveal">
+        <div class="pub-card-top">
+          <span class="pub-card-num">03</span>
+          <span class="pub-card-venue">HHAI · 2025</span>
         </div>
-        <div class="pub-row-arrow">↗</div>
+        <h3 class="pub-card-title">HILL: Interactively Guiding Model Training Through Human Intuition</h3>
+        <div class="pub-card-tags">
+          <span>Human-in-loop</span><span>Latent space</span><span>Distillation</span>
+        </div>
+        <div class="pub-card-footer">
+          <span class="pub-card-type pub-card-conf">Conference</span>
+          <span class="pub-card-link">Read ↗</span>
+        </div>
       </a>
 
     </div>
