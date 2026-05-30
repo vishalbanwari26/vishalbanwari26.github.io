@@ -366,7 +366,7 @@ window.addEventListener('load', function() {
   const SEGS    = 16;
   const GRAVITY = 0.5;
   const DAMPING = 0.982;
-  const ITERS   = 24;
+  const ITERS   = 40;
 
   let W, H, segLen, anchors;
   let dragging = null; // { ropeIdx, ptIdx }
@@ -433,12 +433,17 @@ window.addEventListener('load', function() {
     ctx.clearRect(0, 0, W, H);
 
     ropes.forEach((pts, ri) => {
-      // rope stroke
+      // rope stroke — smooth quadratic bezier through midpoints
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i <= SEGS; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      for (let i = 0; i < SEGS - 1; i++) {
+        const mx = (pts[i].x + pts[i+1].x) / 2;
+        const my = (pts[i].y + pts[i+1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+      }
+      ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
       ctx.strokeStyle = ropeColor;
-      ctx.lineWidth   = 1.5;
+      ctx.lineWidth   = 1.8;
       ctx.lineCap     = 'round';
       ctx.lineJoin    = 'round';
       ctx.stroke();
