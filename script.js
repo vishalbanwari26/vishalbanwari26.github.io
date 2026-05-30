@@ -282,14 +282,12 @@ function initGSAP() {
   });
 
   // Publication cards
-  gsap.utils.toArray('.publication-card').forEach(el => {
-    gsap.fromTo(el,
-      { opacity:0, y:60, x:-20 },
-      { opacity:1, y:0, x:0, duration:1, ease:'power3.out',
-        scrollTrigger: { trigger:el, start:'top 85%', toggleActions:'play none none reverse' }
-      }
-    );
-  });
+  gsap.fromTo('.pub-card',
+    { opacity:0, y:40 },
+    { opacity:1, y:0, duration:0.7, ease:'power3.out', stagger:0.12,
+      scrollTrigger: { trigger:'.pub-grid', start:'top 85%', toggleActions:'play none none reverse' }
+    }
+  );
 
   // Contact
   gsap.fromTo('.contact-content',
