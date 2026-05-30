@@ -1,7 +1,480 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishal Banwari — ML Engineer & Researcher</title>
+  <meta name="description" content="Portfolio of Vishal Banwari — MSc Computer Science student at RPTU. ML Engineer specializing in NLP, Computer Vision, and Human-AI Collaboration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=6" />
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+  <!-- Noise grain overlay -->
+  <div id="noise" aria-hidden="true"></div>
+  <!-- Global grid overlay (covers all sections) -->
+  <div id="page-grid" aria-hidden="true"></div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-outline" id="cursor-outline"></div>
+
+  <!-- Navigation -->
+  <nav id="nav" class="nav">
+    <a href="#hero" class="nav-logo">
+      <img src="vb-logo.svg" alt="VB" class="nav-logo-img" />
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#about" class="nav-link" data-section="about">About</a>
+      <a href="#projects" class="nav-link" data-section="projects">Projects</a>
+      <a href="#experience" class="nav-link" data-section="experience">Experience</a>
+      <a href="#publication" class="nav-link" data-section="publication">Research</a>
+      <a href="#skills" class="nav-link" data-section="skills">Stack</a>
+      <a href="#contact" class="nav-link" data-section="contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <!-- Moon (shown in dark mode) -->
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <!-- Sun (shown in light mode) -->
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <button class="nav-burger" id="navBurger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        AI Research Intern @ ABB · Previously DFKI
+      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-line">Vishal</span>
+        <span class="hero-title-line hero-title-accent" data-text="Banwari">Banwari</span>
+      </h1>
+      <div class="hero-divider"></div>
+      <p class="hero-tagline">Human in the loop. Code in the wild.</p>
+      <p class="hero-subtitle">MSc Computer Science @ RPTU Kaiserslautern · Intelligent Systems</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-num" data-target="3">0</span>
+          <span class="hero-stat-label">Publications</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num" data-target="12" data-suffix="+">0</span>
+          <span class="hero-stat-label">Projects</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num" data-target="7" data-suffix="+">0</span>
+          <span class="hero-stat-label">Yrs Exp.</span>
+        </div>
+      </div>
+      <div class="hero-cta">
+        <a href="#projects" class="btn btn-primary">Explore Projects</a>
+        <a href="#contact" class="btn btn-ghost">Get In Touch</a>
+      </div>
+    </div>
+
+    <div class="hero-marquee" aria-hidden="true">
+      <div class="hero-marquee-track">
+        <span class="mq">PyTorch</span><span class="mq-sep">·</span>
+        <span class="mq">TypeScript</span><span class="mq-sep">·</span>
+        <span class="mq">React</span><span class="mq-sep">·</span>
+        <span class="mq">Hugging Face</span><span class="mq-sep">·</span>
+        <span class="mq">LangChain</span><span class="mq-sep">·</span>
+        <span class="mq">RAG Systems</span><span class="mq-sep">·</span>
+        <span class="mq">Computer Vision</span><span class="mq-sep">·</span>
+        <span class="mq">LLM</span><span class="mq-sep">·</span>
+        <span class="mq">Deep Learning</span><span class="mq-sep">·</span>
+        <span class="mq">Generative AI</span><span class="mq-sep">·</span>
+        <span class="mq">Human-AI Collab</span><span class="mq-sep">·</span>
+        <span class="mq">LoRA / PEFT</span><span class="mq-sep">·</span>
+        <span class="mq">Continual Learning</span><span class="mq-sep">·</span>
+        <span class="mq">Streamlit</span><span class="mq-sep">·</span>
+        <span class="mq">PyTorch</span><span class="mq-sep">·</span>
+        <span class="mq">TypeScript</span><span class="mq-sep">·</span>
+        <span class="mq">React</span><span class="mq-sep">·</span>
+        <span class="mq">Hugging Face</span><span class="mq-sep">·</span>
+        <span class="mq">LangChain</span><span class="mq-sep">·</span>
+        <span class="mq">RAG Systems</span><span class="mq-sep">·</span>
+        <span class="mq">Computer Vision</span><span class="mq-sep">·</span>
+        <span class="mq">LLM</span><span class="mq-sep">·</span>
+        <span class="mq">Deep Learning</span><span class="mq-sep">·</span>
+        <span class="mq">Generative AI</span><span class="mq-sep">·</span>
+        <span class="mq">Human-AI Collab</span><span class="mq-sep">·</span>
+        <span class="mq">LoRA / PEFT</span><span class="mq-sep">·</span>
+        <span class="mq">Continual Learning</span><span class="mq-sep">·</span>
+        <span class="mq">Streamlit</span><span class="mq-sep">·</span>
+      </div>
+    </div>
+
+    <div class="hero-scroll-hint" id="scrollHint">
+      <div class="hero-scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about-section">
+    <div class="about-container">
+      <div class="about-left">
+        <span class="section-label">00 — About</span>
+        <h2 class="about-title">Who I Am</h2>
+        <div class="about-facts">
+          <div class="about-fact">
+            <span class="af-label">Based in</span>
+            <span class="af-value">Kaiserslautern, Germany</span>
+          </div>
+          <div class="about-fact">
+            <span class="af-label">Currently</span>
+            <span class="af-value">AI Research Intern @ ABB</span>
+          </div>
+          <div class="about-fact">
+            <span class="af-label">Studying</span>
+            <span class="af-value">MSc Computer Science · RPTU</span>
+          </div>
+          <div class="about-fact">
+            <span class="af-label">Research focus</span>
+            <span class="af-value">NLP · Human-AI · LLMs</span>
+          </div>
+          <div class="about-fact">
+            <span class="af-label">Background</span>
+            <span class="af-value">Software Engineer → AI Researcher</span>
+          </div>
+        </div>
+      </div>
+      <div class="about-right">
+        <p class="about-bio">
+          I do my MSc in Computer Science at RPTU Kaiserslautern, specializing in Intelligent Systems. Currently working as an AI Research Intern at ABB, where I apply LLMs to industrial fault diagnosis and build RAG pipelines for log intelligence. Before pivoting to research in 2024, I spent seven years shipping software in C++/C# and Angular across industrial sectors, which gave me a strong sense for what AI actually needs to work in the real world.
+        </p>
+        <p class="about-bio">
+          My research sits at the intersection of human-in-the-loop learning, large language models, and AI sustainability. I care about the gap between what AI can do and how humans actually work with it. My published work covers the energy footprint of LLM APIs and web agents, and a framework called HILL that lets humans directly reshape how a model learns during training.
+        </p>
+        <div class="about-interests">
+          <span class="ai-tag">Human-centered AI</span>
+          <span class="ai-tag">LLM research</span>
+          <span class="ai-tag">Sustainable ML</span>
+          <span class="ai-tag">Industrial applications</span>
+          <span class="ai-tag">Open research</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Section (replaces neural network) -->
+  <section id="projects" class="projects-section">
+    <div class="section-header">
+      <span class="section-label">01 — Projects</span>
+      <h2 class="section-title">Featured Work</h2>
+      <p class="section-desc">6 featured projects spanning LLM, Computer Vision, and Research.</p>
+    </div>
+    <div class="projects-grid" id="projectsGrid"></div>
+  </section>
+
+  <!-- Experience Section -->
+  <section id="experience" class="experience-section">
+    <div class="section-header">
+      <span class="section-label">02 — Career</span>
+      <h2 class="section-title">Experience</h2>
+      <p class="section-desc">From industrial software engineering to AI research — 7+ years building systems that matter.</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-line"></div>
+
+      <div class="timeline-item" data-side="right">
+        <div class="timeline-node"><div class="timeline-node-dot"></div></div>
+        <div class="timeline-card glass-card">
+          <div class="timeline-card-header">
+            <div class="timeline-period">Jan 2026 – Present</div>
+            <span class="tl-current">● Active</span>
+          </div>
+          <h3 class="timeline-role">AI Research Intern</h3>
+          <div class="timeline-company">
+            <a href="https://www.abb.com/" target="_blank" rel="noopener" class="tl-company-name">ABB</a>
+            <span class="tl-dot">·</span>
+            <span class="tl-type">Industry</span>
+            <span class="tl-sep">/</span>
+            <span class="timeline-location">Kaiserslautern, Germany</span>
+          </div>
+          <ul class="timeline-details">
+            <li>Building root cause analysis for logs using LLMs</li>
+            <li>Developing RAG pipelines and Streamlit interfaces for log intelligence</li>
+            <li>Applying LLM-based reasoning to industrial fault diagnosis workflows</li>
+          </ul>
+          <div class="timeline-tags">
+            <span class="tag">LLMs</span><span class="tag">RAG</span><span class="tag">Streamlit</span><span class="tag">Log Analysis</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item" data-side="left">
+        <div class="timeline-node"><div class="timeline-node-dot"></div></div>
+        <div class="timeline-card glass-card">
+          <div class="timeline-card-header">
+            <div class="timeline-period">Apr 2024 – Dec 2025</div>
+            <span class="tl-duration">~1.5 yrs</span>
+          </div>
+          <h3 class="timeline-role">Research Assistant</h3>
+          <div class="timeline-company">
+            <a href="https://www.dfki.de/en/web" target="_blank" rel="noopener" class="tl-company-name">DFKI</a>
+            <span class="tl-dot">·</span>
+            <span class="tl-type">Research</span>
+            <span class="tl-sep">/</span>
+            <span class="timeline-location">Kaiserslautern, Germany</span>
+          </div>
+          <ul class="timeline-details">
+            <li>Developed Python GUI tools for human-in-the-loop ML workflows</li>
+            <li>Created novel loss functions with real-time feedback signals</li>
+            <li>Built visualizations for model confidence & embedding insights</li>
+            <li>LLMs and AI Agents energy consumption & efficiency benchmarking</li>
+          </ul>
+          <div class="timeline-tags">
+            <span class="tag">Python</span><span class="tag">PyTorch</span><span class="tag">Human-AI</span><span class="tag">Visualization</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item" data-side="left">
+        <div class="timeline-node"><div class="timeline-node-dot"></div></div>
+        <div class="timeline-card glass-card">
+          <div class="timeline-card-header">
+            <div class="timeline-period">Jun 2021 – Feb 2023</div>
+            <span class="tl-duration">~2 yrs</span>
+          </div>
+          <h3 class="timeline-role">Senior Engineer</h3>
+          <div class="timeline-company">
+            <span class="tl-company-name">Rugged Monitoring</span>
+            <span class="tl-dot">·</span>
+            <span class="tl-type">Industry</span>
+            <span class="tl-sep">/</span>
+            <span class="timeline-location">Hyderabad, India</span>
+          </div>
+          <ul class="timeline-details">
+            <li>Full-stack product development using Angular + .NET Core</li>
+            <li>Designed and delivered industrial monitoring dashboards</li>
+            <li>Led backend architecture for smart data analytics features</li>
+          </ul>
+          <div class="timeline-tags">
+            <span class="tag">Angular</span><span class="tag">.NET Core</span><span class="tag">Full-Stack</span><span class="tag">Analytics</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item" data-side="right">
+        <div class="timeline-node"><div class="timeline-node-dot"></div></div>
+        <div class="timeline-card glass-card">
+          <div class="timeline-card-header">
+            <div class="timeline-period">Feb 2017 – May 2021</div>
+            <span class="tl-duration">~4 yrs</span>
+          </div>
+          <h3 class="timeline-role">Software Engineer</h3>
+          <div class="timeline-company">
+            <span class="tl-company-name">Qualitrol</span>
+            <span class="tl-dot">·</span>
+            <span class="tl-type">Industry</span>
+            <span class="tl-sep">/</span>
+            <span class="timeline-location">Ahmedabad, India</span>
+          </div>
+          <ul class="timeline-details">
+            <li>Built WPF desktop applications using C++/C#</li>
+            <li>Integrated ML modules for energy sector systems</li>
+            <li>Enhanced UI/UX for electrical data visualization tools</li>
+          </ul>
+          <div class="timeline-tags">
+            <span class="tag">C++</span><span class="tag">C#</span><span class="tag">WPF</span><span class="tag">ML Integration</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Publication Section -->
+  <section id="publication" class="publication-section">
+    <div class="section-header">
+      <span class="section-label">03 — Research</span>
+      <h2 class="section-title">Publications</h2>
+    </div>
+
+    <div class="publication-card glass-card reveal">
+      <div class="pub-citation-num">01</div>
+      <div class="pub-header">
+        <span class="pub-venue-badge">arXiv · 2025</span>
+        <span class="pub-type">Preprint</span>
+      </div>
+      <h3 class="pub-title">This Is Taking Too Long — Investigating Time as a Proxy for Energy Consumption of LLMs</h3>
+      <p class="pub-abstract">We investigate inference time measurements as a proxy to approximate the associated energy costs of API-based LLMs, comparing estimations with actual measurements from locally hosted equivalents. Shows that time measurements allow us to infer GPU models for API-based LLMs, grounding energy cost estimations for end users.</p>
+      <div class="pub-highlights">
+        <span class="pub-highlight">Inference time as energy proxy</span>
+        <span class="pub-highlight">GPU model inference</span>
+        <span class="pub-highlight">API cost transparency</span>
+      </div>
+      <a href="https://arxiv.org/abs/2603.15699" target="_blank" rel="noopener" class="btn btn-primary pub-link">Read Paper ↗</a>
+    </div>
+
+    <div class="publication-card glass-card reveal">
+      <div class="pub-citation-num">02</div>
+      <div class="pub-header">
+        <span class="pub-venue-badge">AAAI Workshop · 2025</span>
+        <span class="pub-type">Workshop</span>
+      </div>
+      <h3 class="pub-title">Promoting Sustainable Web Agents: Benchmarking and Estimating Energy Consumption through Empirical and Theoretical Analysis</h3>
+      <p class="pub-abstract">An exploration of the energy and CO₂ costs of web agents (e.g. OpenAI Operator, Google Mariner) from empirical and theoretical perspectives. Shows how different agent design philosophies severely impact energy use — and that more energy consumed does not necessarily equate to better results.</p>
+      <div class="pub-highlights">
+        <span class="pub-highlight">Web agent sustainability</span>
+        <span class="pub-highlight">Energy & CO₂ benchmarking</span>
+        <span class="pub-highlight">Transparency in agent design</span>
+      </div>
+      <a href="https://arxiv.org/abs/2511.04481" target="_blank" rel="noopener" class="btn btn-primary pub-link">Read Paper ↗</a>
+    </div>
+
+    <div class="publication-card glass-card reveal">
+      <div class="pub-citation-num">03</div>
+      <div class="pub-header">
+        <span class="pub-venue-badge">HHAI · May 2025</span>
+        <span class="pub-type featured">Conference</span>
+      </div>
+      <h3 class="pub-title">Human in the Latent Loop (HILL): Interactively Guiding Model Training Through Human Intuition</h3>
+      <p class="pub-abstract">We present HILL, an interactive framework allowing users to incorporate human intuition into the model training loop by reshaping latent space representations via a novel distillation-inspired approach, treating the user's reshaped latent space as a teacher.</p>
+      <div class="pub-highlights">
+        <span class="pub-highlight">Interactive latent guidance</span>
+        <span class="pub-highlight">Distillation from user-shaped space</span>
+        <span class="pub-highlight">Improved generalization</span>
+      </div>
+      <a href="https://www.arxiv.org/pdf/2505.06325" target="_blank" rel="noopener" class="btn btn-primary pub-link">Read Paper ↗</a>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="skills-section">
+    <div class="section-header">
+      <span class="section-label">04 — Stack</span>
+      <h2 class="section-title">Tech Stack</h2>
+      <p class="section-desc">The synapses that power my work.</p>
+    </div>
+    <div class="skills-grid">
+      <div class="skills-category glass-card">
+        <div class="skills-category-icon">💬</div>
+        <h3 class="skills-category-title">Languages</h3>
+        <div class="skills-list">
+          <span class="skill-badge">Python</span>
+          <span class="skill-badge">C++</span>
+          <span class="skill-badge">C#</span>
+          <span class="skill-badge">JavaScript</span>
+          <span class="skill-badge">SQL</span>
+          <span class="skill-badge">HTML/CSS</span>
+        </div>
+      </div>
+      <div class="skills-category glass-card">
+        <div class="skills-category-icon">🧪</div>
+        <h3 class="skills-category-title">ML / AI & NLP</h3>
+        <div class="skills-list">
+          <span class="skill-badge">PyTorch</span>
+          <span class="skill-badge">TensorFlow</span>
+          <span class="skill-badge">Hugging Face</span>
+          <span class="skill-badge">LangChain</span>
+          <span class="skill-badge">scikit-learn</span>
+          <span class="skill-badge">OpenCV</span>
+          <span class="skill-badge">LoRA / PEFT</span>
+          <span class="skill-badge">RAG</span>
+          <span class="skill-badge">Sentence Transformers</span>
+        </div>
+      </div>
+      <div class="skills-category glass-card">
+        <div class="skills-category-icon">🌐</div>
+        <h3 class="skills-category-title">Web & Tools</h3>
+        <div class="skills-list">
+          <span class="skill-badge">Angular</span>
+          <span class="skill-badge">.NET Core</span>
+          <span class="skill-badge">Streamlit</span>
+          <span class="skill-badge">Gradio</span>
+          <span class="skill-badge">Git</span>
+          <span class="skill-badge">Docker</span>
+          <span class="skill-badge">Linux</span>
+          <span class="skill-badge">WPF</span>
+        </div>
+      </div>
+      <div class="skills-category glass-card">
+        <div class="skills-category-icon">🚀</div>
+        <h3 class="skills-category-title">Focus Areas</h3>
+        <div class="skills-list">
+          <span class="skill-badge skill-badge-accent">Generative AI</span>
+          <span class="skill-badge skill-badge-accent">NLP</span>
+          <span class="skill-badge skill-badge-accent">Computer Vision</span>
+          <span class="skill-badge skill-badge-accent">Deep Learning</span>
+          <span class="skill-badge skill-badge-accent">Human-AI Collaboration</span>
+          <span class="skill-badge skill-badge-accent">Continual Learning</span>
+          <span class="skill-badge skill-badge-accent">RAG Systems</span>
+          <span class="skill-badge skill-badge-accent">AI Sustainability</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beyond Code Section -->
+  <section id="beyond" class="beyond-section">
+    <div class="section-header">
+      <span class="section-label">05 — Beyond</span>
+      <h2 class="section-title">Beyond Code</h2>
+    </div>
+    <div class="hobbies-grid">
+      <div class="hobby-item"><span class="hobby-icon">🎸</span><span class="hobby-name">Guitar</span></div>
+      <div class="hobby-item"><span class="hobby-icon">🏓</span><span class="hobby-name">Table Tennis</span></div>
+      <div class="hobby-item"><span class="hobby-icon">📚</span><span class="hobby-name">Reading</span></div>
+      <div class="hobby-item"><span class="hobby-icon">🏃</span><span class="hobby-name">Running</span></div>
+      <div class="hobby-item"><span class="hobby-icon">💪</span><span class="hobby-name">Gym</span></div>
+      <div class="hobby-item"><span class="hobby-icon">⛰️</span><span class="hobby-name">Hiking</span></div>
+      <div class="hobby-item"><span class="hobby-icon">♟️</span><span class="hobby-name">Chess</span></div>
+      <div class="hobby-item"><span class="hobby-icon">🎹</span><span class="hobby-name">Piano</span></div>
+      <div class="hobby-item"><span class="hobby-icon">🌱</span><span class="hobby-name">Gardening</span></div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact-section">
+    <div class="contact-content reveal">
+      <span class="section-label">06 — Contact</span>
+      <h2 class="contact-title">Let's Build <span>Something</span> Together</h2>
+      <p class="contact-desc">Whether it's a research collaboration, engineering challenge, or just a conversation about AI — I'd love to hear from you.</p>
+      <div class="contact-links">
+        <a href="mailto:vishalbanwari26@outlook.com" class="btn btn-primary btn-lg">Send an Email</a>
+        <div class="contact-socials">
+          <a href="https://github.com/vishalbanwari26" target="_blank" rel="noopener" class="social-link" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/vishal-banwari-14b90910b/" target="_blank" rel="noopener" class="social-link" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Built with my own neurons · © 2026 Vishal Banwari</p>
+    <p class="footer-right">ML Engineer & Researcher</p>
+  </footer>
+
+  <script src="script.js?v=6"></script>
 </body>
 </html>

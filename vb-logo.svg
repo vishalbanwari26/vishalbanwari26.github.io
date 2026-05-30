@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Outermost triangle — faint outline -->
+  <polygon points="20,4 38,36 2,36" fill="none" stroke="#2e2e2e" stroke-width="1"/>
+  <!-- Layer 3 — very faint fill -->
+  <polygon points="20,10 35,36 5,36" fill="#ff6b35" fill-opacity="0.10"/>
+  <!-- Layer 2 — medium fill -->
+  <polygon points="20,17 31,36 9,36" fill="#ff6b35" fill-opacity="0.28"/>
+  <!-- Layer 1 — strong fill -->
+  <polygon points="20,24 27,36 13,36" fill="#ff6b35" fill-opacity="0.65"/>
+  <!-- Core — solid -->
+  <polygon points="20,30 23,36 17,36" fill="#ff6b35"/>
+</svg>
