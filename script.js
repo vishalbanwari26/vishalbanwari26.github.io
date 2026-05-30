@@ -375,9 +375,8 @@ window.addEventListener('load', function() {
   const ropes = LABELS.map(() => []);
 
   function resize() {
-    const rect = canvas.parentElement.getBoundingClientRect();
-    W = rect.width * 0.40;
-    H = rect.height;
+    W = Math.round(window.innerWidth * 0.40);
+    H = window.innerHeight;
     canvas.width  = W;
     canvas.height = H;
     // segment length so rope fills ~65% of hero height
