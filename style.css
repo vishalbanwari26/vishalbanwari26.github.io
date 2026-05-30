@@ -613,6 +613,90 @@ img { max-width: 100%; display: block; }
   padding:var(--section-padding) var(--page-gutter);
   background:var(--bg-secondary);
 }
+.pub-list { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; }
+
+.pub-row {
+  display: grid;
+  grid-template-columns: 3rem 1fr 2rem;
+  gap: 1.5rem;
+  align-items: start;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+.pub-row:first-child { border-top: 1px solid var(--border); }
+.pub-row::before {
+  content: '';
+  position: absolute;
+  left: -var(--page-gutter);
+  right: -var(--page-gutter);
+  top: 0; bottom: 0;
+  background: var(--accent-dim);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.pub-row:hover::before { opacity: 1; }
+.pub-row:hover .pub-row-arrow { color: var(--accent); transform: translate(2px, -2px); }
+.pub-row:hover .pub-row-title { color: var(--accent); }
+
+.pub-row-featured { background: rgba(255,107,53,0.02); }
+
+.pub-row-num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  padding-top: 0.25rem;
+  letter-spacing: 0.08em;
+}
+.pub-row-body { display: flex; flex-direction: column; gap: 0.6rem; }
+.pub-row-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.pub-venue-badge {
+  font-family: var(--font-mono); font-size: 0.62rem;
+  color: var(--accent); letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pub-type-pill {
+  font-family: var(--font-mono); font-size: 0.58rem;
+  color: var(--text-muted); background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px; padding: 0.1rem 0.5rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.pub-type-conf {
+  color: var(--accent);
+  border-color: rgba(255,107,53,0.3);
+  background: var(--accent-dim);
+}
+.pub-row-title {
+  font-size: 1rem; font-weight: 700;
+  letter-spacing: -0.02em; line-height: 1.35;
+  color: var(--text-primary);
+  transition: color 0.2s;
+}
+.pub-row-abstract {
+  font-size: 0.8rem; color: var(--text-secondary);
+  line-height: 1.65; max-width: 640px;
+}
+.pub-row-tags {
+  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.2rem;
+}
+.pub-row-tags span {
+  font-family: var(--font-mono); font-size: 0.62rem;
+  color: var(--text-muted); background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 2px; padding: 0.18rem 0.5rem;
+}
+.pub-row-arrow {
+  font-size: 1.1rem; color: var(--text-muted);
+  padding-top: 0.2rem; align-self: start;
+  transition: color 0.2s, transform 0.2s;
+}
+
 .publication-card {
   max-width:800px; margin:0 auto 1.5rem;
   padding:2rem 2rem 2rem 2.25rem;

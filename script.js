@@ -102,8 +102,7 @@ function playHeroAnimations() {
     .to('.hero-subtitle',  { opacity:1, duration:0.5 }, '-=0.4')
     .to('.hero-stats',     { opacity:1, duration:0.5 }, '-=0.3')
     .to('.hero-cta',       { opacity:1, duration:0.5, ease:'back.out(1.5)' }, '-=0.2')
-    .to('.hero-marquee',   { opacity:1, duration:0.8 }, '-=0.1')
-    .to('.hero-scroll-hint',{ opacity:1, duration:1 }, '-=0.4');
+    .to('.hero-marquee',   { opacity:1, duration:0.8 }, '-=0.1');
   tl.call(animateCounters, [], '-=0.5');
 }
 
@@ -462,9 +461,19 @@ window.addEventListener('load', function() {
       const pw = tw + 20, ph = 22, pr = 2;
       const tx = tip.x, ty = tip.y + 2;
 
-      // tag background
+      // tag background (manual rounded rect for compatibility)
+      const x0 = tx - pw/2, y0 = ty;
       ctx.beginPath();
-      ctx.roundRect(tx - pw/2, ty, pw, ph, pr);
+      ctx.moveTo(x0 + pr, y0);
+      ctx.lineTo(x0 + pw - pr, y0);
+      ctx.arcTo(x0 + pw, y0, x0 + pw, y0 + pr, pr);
+      ctx.lineTo(x0 + pw, y0 + ph - pr);
+      ctx.arcTo(x0 + pw, y0 + ph, x0 + pw - pr, y0 + ph, pr);
+      ctx.lineTo(x0 + pr, y0 + ph);
+      ctx.arcTo(x0, y0 + ph, x0, y0 + ph - pr, pr);
+      ctx.lineTo(x0, y0 + pr);
+      ctx.arcTo(x0, y0, x0 + pr, y0, pr);
+      ctx.closePath();
       ctx.fillStyle = tagBg;
       ctx.fill();
       ctx.strokeStyle = tagBorder;
@@ -473,7 +482,6 @@ window.addEventListener('load', function() {
 
       // tag text
       ctx.fillStyle = tagText;
-      ctx.letterSpacing = '0.08em';
       ctx.fillText(label.toUpperCase(), tx, ty + 15);
     });
   }
