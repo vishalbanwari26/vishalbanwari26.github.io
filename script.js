@@ -365,10 +365,7 @@ window.addEventListener('load', function() {
   const GRAVITY = 0.5;
   const DAMPING = 0.982;
   const ITERS   = 40;
-  const WAVE_AMP   = 2.5;  // idle sway amplitude (px) — subtle
-  const WAVE_SPEED = 0.008; // idle sway speed
-
-  let W, H, segLen, anchors, t = 0;
+  let W, H, segLen, anchors;
   let dragging = null;
 
   // Each rope: array of {x,y,ox,oy}
@@ -410,17 +407,13 @@ window.addEventListener('load', function() {
   }
 
   function tick() {
-    t += WAVE_SPEED;
-    ropes.forEach((pts, ri) => {
-      pts.forEach((p, pi) => {
+    ropes.forEach(pts => {
+      pts.forEach(p => {
         if (p.pinned) return;
         const vx = (p.x - p.ox) * DAMPING;
         const vy = (p.y - p.oy) * DAMPING;
         p.ox = p.x; p.oy = p.y;
-        // idle sine wave — only nudge slightly if not being dragged
-        const idleX = dragging && dragging.ri === ri ? 0
-          : Math.sin(t + ri * 1.8 + pi * 0.3) * WAVE_AMP * (pi / SEGS) * 0.06;
-        p.x += vx + idleX;
+        p.x += vx;
         p.y += vy + GRAVITY;
       });
     });
