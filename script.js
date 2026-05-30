@@ -355,3 +355,177 @@ function scrambleText(el) {
     iter += 0.5;
   }, 25);
 }
+
+// ── Hanging Ropes ──────────────────────────────────────────────────────────
+(function initRopes() {
+  const SEGMENTS = 18;
+  const SEG_LEN  = 22;
+  const GRAVITY  = 0.45;
+  const DAMPING  = 0.985;
+  const ITERS    = 20;
+  const ROPE_W   = 1.5;
+
+  class RopePoint {
+    constructor(x, y, pinned) {
+      this.x = x; this.y = y;
+      this.ox = x; this.oy = y;
+      this.pinned = pinned;
+    }
+    update() {
+      if (this.pinned) return;
+      const vx = (this.x - this.ox) * DAMPING;
+      const vy = (this.y - this.oy) * DAMPING;
+      this.ox = this.x; this.oy = this.y;
+      this.x += vx;
+      this.y += vy + GRAVITY;
+    }
+  }
+
+  class Rope {
+    constructor(canvas, tag) {
+      this.canvas = canvas;
+      this.tag    = tag;
+      this.ctx    = canvas.getContext('2d');
+      this.points = [];
+      this.dragging = false;
+      this.dragIdx  = -1;
+
+      for (let i = 0; i <= SEGMENTS; i++) {
+        this.points.push(new RopePoint(0, i * SEG_LEN, i === 0));
+      }
+
+      this.resize();
+      this.bindEvents();
+    }
+
+    resize() {
+      const totalH = SEGMENTS * SEG_LEN + 8;
+      this.canvas.width  = 60;
+      this.canvas.height = totalH;
+      // re-pin top
+      const cx = this.canvas.width / 2;
+      this.points[0].x = cx;
+      this.points[0].y = 0;
+      this.points[0].ox = cx;
+      this.points[0].oy = 0;
+    }
+
+    constrain() {
+      for (let iter = 0; iter < ITERS; iter++) {
+        for (let i = 0; i < SEGMENTS; i++) {
+          const a = this.points[i], b = this.points[i + 1];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+          const diff = (dist - SEG_LEN) / dist * 0.5;
+          const ox = dx * diff, oy = dy * diff;
+          if (!a.pinned) { a.x += ox; a.y += oy; }
+          if (!b.pinned) { b.x -= ox; b.y -= oy; }
+        }
+        // keep pin locked
+        this.points[0].x = this.canvas.width / 2;
+        this.points[0].y = 0;
+      }
+    }
+
+    draw() {
+      const ctx = this.ctx;
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // rope line
+      ctx.beginPath();
+      ctx.moveTo(this.points[0].x, this.points[0].y);
+      for (let i = 1; i <= SEGMENTS; i++) {
+        ctx.lineTo(this.points[i].x, this.points[i].y);
+      }
+      ctx.strokeStyle = isDark ? '#2e2e2e' : '#ccc9c2';
+      ctx.lineWidth   = ROPE_W;
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+      ctx.stroke();
+
+      // knot at top
+      ctx.beginPath();
+      ctx.arc(this.points[0].x, this.points[0].y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff6b35';
+      ctx.fill();
+
+      // position tag under last point
+      const last = this.points[SEGMENTS];
+      const wrap = this.canvas.parentElement;
+      const tagEl = this.tag;
+      const canvasRect = this.canvas.getBoundingClientRect();
+      const wrapRect   = wrap.getBoundingClientRect();
+      const offsetX = (last.x - this.canvas.width / 2);
+      tagEl.style.transform = `translateX(${offsetX}px)`;
+    }
+
+    tick() {
+      this.points.forEach(p => p.update());
+      this.constrain();
+      this.draw();
+    }
+
+    bindEvents() {
+      const getPos = (e, canvas) => {
+        const r = canvas.getBoundingClientRect();
+        const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+        const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+        return { cx, cy };
+      };
+
+      const onDown = (e) => {
+        const { cx, cy } = getPos(e, this.canvas);
+        let best = Infinity, idx = -1;
+        this.points.forEach((p, i) => {
+          if (i === 0) return;
+          const d = Math.hypot(p.x - cx, p.y - cy);
+          if (d < best) { best = d; idx = i; }
+        });
+        if (best < 30) { this.dragging = true; this.dragIdx = idx; }
+        e.preventDefault();
+      };
+
+      const onMove = (e) => {
+        if (!this.dragging) return;
+        const { cx, cy } = getPos(e, this.canvas);
+        const p = this.points[this.dragIdx];
+        p.ox = p.x; p.oy = p.y;
+        p.x = cx; p.y = cy;
+        e.preventDefault();
+      };
+
+      const onUp = () => { this.dragging = false; this.dragIdx = -1; };
+
+      this.canvas.addEventListener('mousedown',  onDown,  { passive: false });
+      this.canvas.addEventListener('touchstart', onDown,  { passive: false });
+      window.addEventListener('mousemove',  onMove,  { passive: false });
+      window.addEventListener('touchmove',  onMove,  { passive: false });
+      window.addEventListener('mouseup',   onUp);
+      window.addEventListener('touchend',  onUp);
+    }
+
+    // give the rope a little initial swing
+    nudge(dir) {
+      for (let i = 4; i <= SEGMENTS; i++) {
+        this.points[i].x += dir * (i / SEGMENTS) * 8;
+      }
+    }
+  }
+
+  const ropes = [];
+  document.querySelectorAll('.rope-wrap').forEach((wrap, idx) => {
+    const canvas = wrap.querySelector('.rope-canvas');
+    const tag    = wrap.querySelector('.rope-tag');
+    const rope   = new Rope(canvas, tag);
+    ropes.push(rope);
+    // stagger initial nudge for natural look
+    setTimeout(() => rope.nudge(idx % 2 === 0 ? 1 : -1), idx * 180);
+  });
+
+  function loop() {
+    ropes.forEach(r => r.tick());
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
