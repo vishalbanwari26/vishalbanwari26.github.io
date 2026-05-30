@@ -350,55 +350,18 @@ img { max-width: 100%; display: block; }
 /* ========================================
    Hero Ropes
    ======================================== */
-.hero-ropes {
+#ropes-canvas {
   position: absolute;
   top: 0; right: 0;
-  width: 42%;
+  width: 40%;
   height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 3.5rem;
-  pointer-events: none;
-  z-index: 1;
-  padding-right: 2rem;
-}
-.rope-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   pointer-events: auto;
   cursor: grab;
-  user-select: none;
-}
-.rope-wrap:active { cursor: grabbing; }
-.rope-canvas {
+  z-index: 1;
   display: block;
 }
-.rope-tag {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: 2px;
-  padding: 0.35rem 0.75rem;
-  white-space: nowrap;
-  transition: color 0.2s, border-color 0.2s;
-  position: relative;
-  top: -2px;
-}
-.rope-wrap:hover .rope-tag {
-  color: var(--accent);
-  border-color: rgba(255,107,53,0.4);
-}
-@media (max-width: 768px) {
-  .hero-ropes { display: none; }
-}
+#ropes-canvas:active { cursor: grabbing; }
+@media (max-width: 768px) { #ropes-canvas { display: none; } }
 
 /* ========================================
    Buttons
