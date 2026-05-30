@@ -281,11 +281,11 @@ function initGSAP() {
     );
   });
 
-  // Publication cards
+  // Publication cards — simple fade, no scroll dependency
   gsap.fromTo('.pub-card',
-    { opacity:0, y:40 },
-    { opacity:1, y:0, duration:0.7, ease:'power3.out', stagger:0.12,
-      scrollTrigger: { trigger:'.pub-grid', start:'top 85%', toggleActions:'play none none reverse' }
+    { opacity:0, y:20 },
+    { opacity:1, y:0, duration:0.6, ease:'power2.out', stagger:0.1,
+      scrollTrigger: { trigger:'.pub-grid', start:'top 98%', once:true }
     }
   );
 
@@ -365,8 +365,8 @@ window.addEventListener('load', function() {
   const GRAVITY = 0.5;
   const DAMPING = 0.982;
   const ITERS   = 40;
-  const WAVE_AMP   = 5;    // idle sway amplitude (px)
-  const WAVE_SPEED = 0.012; // idle sway speed
+  const WAVE_AMP   = 2.5;  // idle sway amplitude (px) — subtle
+  const WAVE_SPEED = 0.008; // idle sway speed
 
   let W, H, segLen, anchors, t = 0;
   let dragging = null;
@@ -375,14 +375,14 @@ window.addEventListener('load', function() {
   const ropes = LABELS.map(() => []);
 
   function resize() {
-    W = Math.round(window.innerWidth * 0.40);
+    W = window.innerWidth;
     H = window.innerHeight;
     canvas.width  = W;
     canvas.height = H;
-    // segment length so rope fills ~65% of hero height
     segLen = (H * 0.65) / SEGS;
-    // anchor X positions: evenly spaced across the canvas
-    anchors = [W * 0.22, W * 0.5, W * 0.78];
+    // anchor ropes in the right 40% of the full canvas
+    const rx = W * 0.60;
+    anchors = [rx + W*0.08, rx + W*0.18, rx + W*0.28];
     // init / reset rope points
     ropes.forEach((pts, ri) => {
       pts.length = 0;
@@ -535,9 +535,10 @@ window.addEventListener('load', function() {
     };
   }
 
-  canvas.addEventListener('mousedown', e => {
+  // drag via window (canvas is pointer-events:none so hero links still work)
+  window.addEventListener('mousedown', e => {
     const { cx, cy } = getCanvasPos(e);
-    let best = 28, found = null;
+    let best = 36, found = null;
     ropes.forEach((pts, ri) => {
       pts.forEach((p, pi) => {
         if (pi === 0) return;
@@ -548,9 +549,9 @@ window.addEventListener('load', function() {
     if (found) { dragging = found; e.preventDefault(); }
   }, { passive: false });
 
-  canvas.addEventListener('touchstart', e => {
+  window.addEventListener('touchstart', e => {
     const { cx, cy } = getCanvasPos(e);
-    let best = 36, found = null;
+    let best = 44, found = null;
     ropes.forEach((pts, ri) => {
       pts.forEach((p, pi) => {
         if (pi === 0) return;
