@@ -360,8 +360,10 @@ window.addEventListener('load', function() {
 
   const ctx    = canvas.getContext('2d');
   const DPR    = window.devicePixelRatio || 1;
-  const LABELS = ['Nature lover', 'AI engineer', 'Lifemaxxing'];
+  const LABELS = ['Nature lover', 'AI engineer', 'Sidequesting'];
   const COLORS = ['#00d4ff', '#ff6b35', '#8b5cf6'];
+  const MONKEY_R  = 22;  // hitbox radius for monkey click
+  const COLL_DIST = 20;  // rope-rope collision distance (px)
   const SEGS   = 14;
   const GRAV   = 0.55;
   const DAMP   = 0.96;   // higher = settles faster
@@ -369,9 +371,10 @@ window.addEventListener('load', function() {
   const SLEEP  = 0.08;   // velocity threshold to stop loop
 
   let W, H, segLen, anchors;
-  let dragging = null;
-  let rafId    = null;
-  let sleeping = false;
+  let dragging  = null;
+  let rafId     = null;
+  let sleeping  = false;
+  let idleTimer = null;
 
   const ropes = LABELS.map(() => []);
 
@@ -416,6 +419,26 @@ window.addEventListener('load', function() {
     }
   }
 
+  function ropeCollisions() {
+    for (let ri = 0; ri < ropes.length; ri++) {
+      for (let rj = ri + 1; rj < ropes.length; rj++) {
+        for (let pi = 1; pi <= SEGS; pi++) {
+          for (let pj = 1; pj <= SEGS; pj++) {
+            const a = ropes[ri][pi], b = ropes[rj][pj];
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const d  = Math.sqrt(dx*dx + dy*dy) || 0.001;
+            if (d < COLL_DIST) {
+              const push = (COLL_DIST - d) / 2;
+              const nx = dx / d, ny = dy / d;
+              a.x -= nx * push; a.y -= ny * push;
+              b.x += nx * push; b.y += ny * push;
+            }
+          }
+        }
+      }
+    }
+  }
+
   function totalEnergy() {
     let e = 0;
     ropes.forEach(pts => pts.forEach(p => {
@@ -437,6 +460,7 @@ window.addEventListener('load', function() {
       });
     });
     ropes.forEach((pts, ri) => constrain(pts, anchors[ri]));
+    ropeCollisions();
   }
 
   function rgba(hex, a) {
@@ -495,21 +519,68 @@ window.addEventListener('load', function() {
       ctx.arc(pts[0].x, 3, 3.5, 0, Math.PI*2);
       ctx.fillStyle = col; ctx.fill();
 
-      // label tag
+      // monkey body
       const tip = pts[SEGS];
-      const label = LABELS[ri];
-      ctx.font = '600 9px "JetBrains Mono",monospace';
-      ctx.textAlign = 'center';
-      const tw = ctx.measureText(label.toUpperCase()).width;
-      const pw = tw+20, ph=20, pr=3;
-      const tx = tip.x, ty = tip.y + 6;
+      const mx = tip.x, my = tip.y + 10;
 
-      drawRoundRect(tx-pw/2, ty, pw, ph, pr);
-      ctx.fillStyle = tagBg; ctx.fill();
-      ctx.strokeStyle = rgba(col, 0.55); ctx.lineWidth=1; ctx.stroke();
-      ctx.fillStyle = col;
-      ctx.fillText(label.toUpperCase(), tx, ty+14);
+      // body
+      ctx.beginPath();
+      ctx.ellipse(mx, my + 14, 10, 12, 0, 0, Math.PI*2);
+      ctx.fillStyle = rgba(col, 0.18); ctx.fill();
+      ctx.strokeStyle = rgba(col, 0.5); ctx.lineWidth = 1; ctx.stroke();
+
+      // head
+      ctx.beginPath();
+      ctx.arc(mx, my, 13, 0, Math.PI*2);
+      ctx.fillStyle = rgba(col, 0.18); ctx.fill();
+      ctx.strokeStyle = rgba(col, 0.5); ctx.lineWidth = 1; ctx.stroke();
+
+      // ears
+      [-14, 14].forEach(ex => {
+        ctx.beginPath();
+        ctx.arc(mx + ex, my - 2, 5, 0, Math.PI*2);
+        ctx.fillStyle = rgba(col, 0.25); ctx.fill();
+        ctx.strokeStyle = rgba(col, 0.5); ctx.lineWidth = 1; ctx.stroke();
+      });
+
+      // face plate
+      ctx.beginPath();
+      ctx.ellipse(mx, my + 4, 8, 7, 0, 0, Math.PI*2);
+      ctx.fillStyle = rgba(col, 0.28); ctx.fill();
+
+      // eyes
+      [-4, 4].forEach(ex => {
+        ctx.beginPath();
+        ctx.arc(mx + ex, my - 3, 2, 0, Math.PI*2);
+        ctx.fillStyle = col; ctx.fill();
+      });
+
+      // smile
+      ctx.beginPath();
+      ctx.arc(mx, my + 5, 4, 0.2, Math.PI - 0.2);
+      ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // label below monkey
+      ctx.font = '500 8px "JetBrains Mono",monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = rgba(col, 0.6);
+      ctx.fillText(LABELS[ri].toUpperCase(), mx, my + 36);
     });
+  }
+
+  function scheduleIdleNudge() {
+    if (idleTimer) return;
+    const delay = 10000 + Math.random() * 5000; // 10–15 s
+    idleTimer = setTimeout(() => {
+      idleTimer = null;
+      ropes.forEach((pts, ri) => {
+        const dir = (ri % 2 === 0) ? 1 : -1;
+        for (let pi = Math.floor(SEGS * 0.6); pi <= SEGS; pi++) {
+          pts[pi].ox += dir * 4 * (pi / SEGS); // small nudge, weighted to tip
+        }
+      });
+      wake();
+    }, delay);
   }
 
   function loop() {
@@ -518,7 +589,8 @@ window.addEventListener('load', function() {
     if (!dragging && totalEnergy() < SLEEP) {
       sleeping = true;
       rafId = null;
-      return; // stop the loop — ropes are static
+      scheduleIdleNudge();
+      return;
     }
     rafId = requestAnimationFrame(loop);
   }
@@ -534,8 +606,35 @@ window.addEventListener('load', function() {
              cy: e.touches ? e.touches[0].clientY : e.clientY };
   }
 
+  function cancelIdleTimer() {
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+  }
+
+  function tryRepelMonkey(cx, cy) {
+    for (let ri = 0; ri < ropes.length; ri++) {
+      const tip = ropes[ri][SEGS];
+      const mx = tip.x, my = tip.y + 10;
+      if (Math.hypot(cx - mx, cy - my) < MONKEY_R + 10) {
+        // direction away from cursor
+        const dx = mx - cx, dy = my - cy;
+        const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+        const fx = (dx/d) * 60, fy = (dy/d) * 60;
+        // apply impulse to bottom half of rope
+        for (let pi = Math.floor(SEGS/2); pi <= SEGS; pi++) {
+          ropes[ri][pi].ox += -fx * (pi/SEGS);
+          ropes[ri][pi].oy += -fy * (pi/SEGS);
+        }
+        wake();
+        return true; // consumed
+      }
+    }
+    return false;
+  }
+
   window.addEventListener('mousedown', e => {
     const { cx, cy } = clientPos(e);
+    cancelIdleTimer();
+    if (tryRepelMonkey(cx, cy)) { e.preventDefault(); return; }
     let best = 40, found = null;
     ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
       if (pi === 0) return;
@@ -547,6 +646,8 @@ window.addEventListener('load', function() {
 
   window.addEventListener('touchstart', e => {
     const { cx, cy } = clientPos(e);
+    cancelIdleTimer();
+    if (tryRepelMonkey(cx, cy)) { e.preventDefault(); return; }
     let best = 50, found = null;
     ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
       if (pi === 0) return;
