@@ -934,7 +934,7 @@ section *, footer * { pointer-events:auto; }
    ======================================== */
 .about-section {
   padding: var(--section-padding) var(--page-gutter);
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .about-container {
