@@ -372,10 +372,13 @@ window.addEventListener('load', function() {
   const CLIMB_SPD = 0.04; // segments per frame
 
   let W, H, segLen, anchors;
-  let dragging  = null;
-  let rafId     = null;
-  let sleeping  = false;
-  let idleTimer = null;
+  let dragging    = null;
+  let rafId       = null;
+  let sleeping    = false;
+  let idleTimer   = null;
+  let hoveredRope = -1;   // index of rope cursor is near (-1 = none)
+  let hoverMon    = -1;   // index of monkey cursor is near
+  let showHint    = true; // first-load hint
 
   // monkey state per rope: seg = float position along rope (0=top, SEGS=bottom)
   const monkeys = LABELS.map(() => ({ seg: SEGS, dir: 0, idleTarget: SEGS }));
@@ -383,9 +386,8 @@ window.addEventListener('load', function() {
   const ropes = LABELS.map(() => []);
 
   function resize() {
-    W = window.innerWidth;
+    W = Math.round(window.innerWidth * 0.45);
     H = window.innerHeight;
-    // set canvas buffer in physical pixels, scale ctx so coords are CSS px
     canvas.width  = W * DPR;
     canvas.height = H * DPR;
     canvas.style.width  = W + 'px';
@@ -394,9 +396,9 @@ window.addEventListener('load', function() {
 
     segLen = (H * 0.62) / SEGS;
 
-    // three anchors evenly spaced across the right 28% of the page
-    const base = W * 0.73;
-    const gap  = W * 0.09;
+    // three anchors spaced across the canvas
+    const gap = W * 0.25;
+    const base = W * 0.2;
     anchors = [base, base + gap, base + gap * 2];
 
     ropes.forEach((pts, ri) => {
@@ -468,13 +470,14 @@ window.addEventListener('load', function() {
 
     // monkey climbing
     let anyClimbing = false;
-    monkeys.forEach((m, ri) => {
+    monkeys.forEach(m => {
       if (m.dir === 0) return;
-      m.seg += m.dir * CLIMB_SPD;
+      // go up fast, return down slow
+      const spd = m.dir < 0 ? CLIMB_SPD * 3 : CLIMB_SPD * 0.8;
+      m.seg += m.dir * spd;
       if (m.dir < 0 && m.seg <= m.idleTarget) {
         m.seg = m.idleTarget;
-        // reached top of idle climb — now go back down
-        m.idleTarget = SEGS;
+        m.idleTarget = SEGS; // always return to bottom
         m.dir = 1;
       } else if (m.dir > 0 && m.seg >= m.idleTarget) {
         m.seg = m.idleTarget;
@@ -507,10 +510,22 @@ window.addEventListener('load', function() {
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
     const tagBg  = isDark ? '#0a0a0a' : '#ffffff';
 
+    // first-load hint: "drag ropes · click monkeys"
+    if (showHint) {
+      ctx.save();
+      ctx.font = '500 10px "JetBrains Mono",monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = rgba(COLORS[1], 0.45);
+      ctx.fillText('↕ CLICK MONKEYS  ·  DRAG ROPES', W / 2, 28);
+      ctx.restore();
+    }
+
     ropes.forEach((pts, ri) => {
+      const isHovered = hoveredRope === ri;
       const col = COLORS[ri];
+      const alpha = isHovered ? 0.95 : 0.75;
 
-      // glow pass
+      // rope
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 0; i < SEGS - 1; i++) {
@@ -519,21 +534,8 @@ window.addEventListener('load', function() {
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
       }
       ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = rgba(col, 0.13);
-      ctx.lineWidth = 10; ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // core pass
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < SEGS - 1; i++) {
-        const mx = (pts[i].x + pts[i+1].x) / 2;
-        const my = (pts[i].y + pts[i+1].y) / 2;
-        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
-      }
-      ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = rgba(col, 0.75);
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = rgba(col, alpha);
+      ctx.lineWidth = isHovered ? 2.2 : 1.5;
       ctx.stroke();
 
       // pin
@@ -660,31 +662,32 @@ window.addEventListener('load', function() {
 
   // mouse / touch drag via window
   function clientPos(e) {
-    return { cx: e.touches ? e.touches[0].clientX : e.clientX,
-             cy: e.touches ? e.touches[0].clientY : e.clientY };
+    const r  = canvas.getBoundingClientRect();
+    const ex = e.touches ? e.touches[0].clientX : e.clientX;
+    const ey = e.touches ? e.touches[0].clientY : e.clientY;
+    return { cx: ex - r.left, cy: ey - r.top };
   }
 
   function cancelIdleTimer() {
     if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
   }
 
+  function monkeyXY(ri) {
+    const m  = monkeys[ri];
+    const si = Math.min(Math.floor(m.seg), SEGS - 1);
+    const sf = m.seg - si;
+    const pa = ropes[ri][si], pb = ropes[ri][Math.min(si + 1, SEGS)];
+    return { x: pa.x + (pb.x - pa.x) * sf, y: pa.y + (pb.y - pa.y) * sf };
+  }
+
   function tryClimbMonkey(cx, cy) {
     for (let ri = 0; ri < ropes.length; ri++) {
-      const m  = monkeys[ri];
-      const si = Math.min(Math.floor(m.seg), SEGS - 1);
-      const sf = m.seg - si;
-      const pa = ropes[ri][si], pb = ropes[ri][Math.min(si+1, SEGS)];
-      const mx = pa.x + (pb.x - pa.x) * sf;
-      const my = pa.y + (pb.y - pa.y) * sf;
+      const { x: mx, y: my } = monkeyXY(ri);
       if (Math.hypot(cx - mx, cy - my) < MONKEY_R) {
-        // toggle: climb up if at bottom, down if already up
-        if (m.seg > SEGS * 0.5) {
-          m.idleTarget = Math.floor(SEGS * 0.15);
-          m.dir = -1; // climb up
-        } else {
-          m.idleTarget = SEGS;
-          m.dir = 1;  // climb down
-        }
+        const m = monkeys[ri];
+        // always scurry up fast, then return — predictable every time
+        m.idleTarget = Math.max(1, Math.floor(SEGS * 0.12));
+        m.dir = -1;
         wake();
         return true;
       }
@@ -692,7 +695,7 @@ window.addEventListener('load', function() {
     return false;
   }
 
-  window.addEventListener('mousedown', e => {
+  canvas.addEventListener('mousedown', e => {
     const { cx, cy } = clientPos(e);
     cancelIdleTimer();
     if (tryClimbMonkey(cx, cy)) { e.preventDefault(); return; }
@@ -705,7 +708,7 @@ window.addEventListener('load', function() {
     if (found) { dragging=found; wake(); e.preventDefault(); }
   }, { passive: false });
 
-  window.addEventListener('touchstart', e => {
+  canvas.addEventListener('touchstart', e => {
     const { cx, cy } = clientPos(e);
     cancelIdleTimer();
     if (tryClimbMonkey(cx, cy)) { e.preventDefault(); return; }
@@ -717,6 +720,33 @@ window.addEventListener('load', function() {
     }));
     if (found) { dragging=found; wake(); e.preventDefault(); }
   }, { passive: false });
+
+  canvas.addEventListener('mousemove', e => {
+    const { cx, cy } = clientPos(e);
+
+    if (dragging) {
+      const p = ropes[dragging.ri][dragging.pi];
+      p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
+      return;
+    }
+
+    // hover detection
+    let newHovRope = -1, newHovMon = -1;
+    ropes.forEach((pts, ri) => {
+      const { x: mx, y: my } = monkeyXY(ri);
+      if (Math.hypot(cx - mx, cy - my) < MONKEY_R + 4) { newHovMon = ri; return; }
+      for (let pi = 1; pi <= SEGS; pi++) {
+        if (Math.hypot(pts[pi].x - cx, pts[pi].y - cy) < 18) { newHovRope = ri; break; }
+      }
+    });
+
+    if (newHovMon !== hoverMon || newHovRope !== hoveredRope) {
+      hoverMon    = newHovMon;
+      hoveredRope = newHovRope;
+      canvas.style.cursor = newHovMon >= 0 ? 'pointer' : newHovRope >= 0 ? 'grab' : 'default';
+      wake();
+    }
+  });
 
   window.addEventListener('mousemove', e => {
     if (!dragging) return;
@@ -739,6 +769,9 @@ window.addEventListener('load', function() {
   resize();
   window.addEventListener('resize', () => { resize(); wake(); });
 
-  // draw initial static frame (no animation until dragged)
+  // draw initial static frame
   draw();
+
+  // hide hint after 4s
+  setTimeout(() => { showHint = false; draw(); }, 4000);
 });
