@@ -359,55 +359,50 @@ window.addEventListener('load', function() {
   if (!canvas) return;
 
   const ctx    = canvas.getContext('2d');
-  const DPR    = window.devicePixelRatio || 1;
   const LABELS = ['Nature lover', 'AI engineer', 'Sidequesting'];
   const COLORS = ['#00d4ff', '#ff6b35', '#8b5cf6'];
-  const MONKEY_R  = 28;
+  const SEGS   = 14;
+  const GRAV   = 0.55;
+  const DAMP   = 0.96;
+  const ITERS  = 30;
+  const SLEEP  = 0.08;
+  const CLIMB_SPD = 0.04;
   const COLL_DIST = 20;
-  const SEGS      = 14;
-  const GRAV      = 0.55;
-  const DAMP      = 0.96;
-  const ITERS     = 30;
-  const SLEEP     = 0.08;
-  const CLIMB_SPD = 0.04; // segments per frame
 
   let W, H, segLen, anchors;
-  let dragging    = null;
-  let rafId       = null;
-  let sleeping    = false;
-  let idleTimer   = null;
-  let hoveredRope  = -1;
-  let hoverMon     = -1;
-  let monkeyDrag   = -1;  // rope index being dragged by monkey
-  let showHint     = true;
+  let dragging  = null;
+  let rafId     = null;
+  let sleeping  = false;
+  let idleTimer = null;
+  let hovRope   = -1;
 
-  // monkey state per rope: seg = float position along rope (0=top, SEGS=bottom)
-  const monkeys = LABELS.map(() => ({ seg: SEGS, dir: 0, idleTarget: SEGS }));
+  const monkeys = LABELS.map(() => ({ seg: SEGS, dir: 0, target: SEGS }));
+  const ropes   = LABELS.map(() => []);
 
-  const ropes = LABELS.map(() => []);
+  function rgba(hex, a) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
 
   function resize() {
-    W = Math.round(window.innerWidth * 0.45);
+    // full-width canvas but 1:1 pixels (no DPR) for performance
+    W = window.innerWidth;
     H = window.innerHeight;
-    canvas.width  = W * DPR;
-    canvas.height = H * DPR;
+    canvas.width  = W;
+    canvas.height = H;
     canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
     segLen = (H * 0.62) / SEGS;
-
-    // three anchors spaced across the canvas
-    const gap = W * 0.25;
-    const base = W * 0.2;
+    // anchors in the right 30% of the viewport
+    const base = W * 0.73, gap = W * 0.09;
     anchors = [base, base + gap, base + gap * 2];
 
     ropes.forEach((pts, ri) => {
       pts.length = 0;
       const ax = anchors[ri];
-      for (let i = 0; i <= SEGS; i++) {
+      for (let i = 0; i <= SEGS; i++)
         pts.push({ x: ax, y: i * segLen, ox: ax, oy: i * segLen, pinned: i === 0 });
-      }
     });
   }
 
@@ -415,9 +410,9 @@ window.addEventListener('load', function() {
     for (let it = 0; it < ITERS; it++) {
       pts[0].x = ax; pts[0].y = 0;
       for (let i = 0; i < SEGS; i++) {
-        const a = pts[i], b = pts[i + 1];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const d  = Math.sqrt(dx*dx + dy*dy) || 0.001;
+        const a = pts[i], b = pts[i+1];
+        const dx = b.x-a.x, dy = b.y-a.y;
+        const d  = Math.sqrt(dx*dx+dy*dy) || 0.001;
         const f  = (d - segLen) / d * 0.5;
         if (!a.pinned) { a.x += dx*f; a.y += dy*f; }
         if (!b.pinned) { b.x -= dx*f; b.y -= dy*f; }
@@ -426,380 +421,213 @@ window.addEventListener('load', function() {
     }
   }
 
-  function ropeCollisions() {
-    for (let ri = 0; ri < ropes.length; ri++) {
-      for (let rj = ri + 1; rj < ropes.length; rj++) {
-        for (let pi = 1; pi <= SEGS; pi++) {
+  function collide() {
+    for (let ri = 0; ri < ropes.length; ri++)
+      for (let rj = ri+1; rj < ropes.length; rj++)
+        for (let pi = 1; pi <= SEGS; pi++)
           for (let pj = 1; pj <= SEGS; pj++) {
             const a = ropes[ri][pi], b = ropes[rj][pj];
-            const dx = b.x - a.x, dy = b.y - a.y;
-            const d  = Math.sqrt(dx*dx + dy*dy) || 0.001;
+            const dx = b.x-a.x, dy = b.y-a.y;
+            const d  = Math.sqrt(dx*dx+dy*dy) || 0.001;
             if (d < COLL_DIST) {
-              const push = (COLL_DIST - d) / 2;
-              const nx = dx / d, ny = dy / d;
-              a.x -= nx * push; a.y -= ny * push;
-              b.x += nx * push; b.y += ny * push;
+              const push = (COLL_DIST - d) / 2 / d;
+              a.x -= dx*push; a.y -= dy*push;
+              b.x += dx*push; b.y += dy*push;
             }
           }
-        }
-      }
-    }
   }
 
-  function totalEnergy() {
+  function energy() {
     let e = 0;
-    ropes.forEach(pts => pts.forEach(p => {
-      if (p.pinned) return;
-      e += Math.abs(p.x - p.ox) + Math.abs(p.y - p.oy);
-    }));
+    ropes.forEach(pts => pts.forEach(p => { if (!p.pinned) e += Math.abs(p.x-p.ox)+Math.abs(p.y-p.oy); }));
     return e;
   }
 
-  function tick() {
-    ropes.forEach(pts => {
-      pts.forEach(p => {
-        if (p.pinned) return;
-        const vx = (p.x - p.ox) * DAMP;
-        const vy = (p.y - p.oy) * DAMP;
-        p.ox = p.x; p.oy = p.y;
-        p.x += vx;
-        p.y += vy + GRAV;
-      });
-    });
-    ropes.forEach((pts, ri) => constrain(pts, anchors[ri]));
-    ropeCollisions();
+  function monkeyPos(ri) {
+    const m  = monkeys[ri];
+    const si = Math.min(Math.floor(m.seg), SEGS-1);
+    const t  = m.seg - si;
+    const pa = ropes[ri][si], pb = ropes[ri][Math.min(si+1, SEGS)];
+    return { x: pa.x + (pb.x-pa.x)*t, y: pa.y + (pb.y-pa.y)*t };
+  }
 
-    // monkey climbing
-    let anyClimbing = false;
+  function tick() {
+    ropes.forEach(pts => pts.forEach(p => {
+      if (p.pinned) return;
+      const vx = (p.x-p.ox)*DAMP, vy = (p.y-p.oy)*DAMP;
+      p.ox=p.x; p.oy=p.y; p.x+=vx; p.y+=vy+GRAV;
+    }));
+    ropes.forEach((pts,ri) => constrain(pts, anchors[ri]));
+    collide();
+
+    let climbing = false;
     monkeys.forEach(m => {
       if (m.dir === 0) return;
-      // go up fast, return down slow
-      const spd = m.dir < 0 ? CLIMB_SPD * 3 : CLIMB_SPD * 0.8;
+      const spd = m.dir < 0 ? CLIMB_SPD * 3 : CLIMB_SPD * 0.7;
       m.seg += m.dir * spd;
-      if (m.dir < 0 && m.seg <= m.idleTarget) {
-        m.seg = m.idleTarget;
-        m.idleTarget = SEGS; // always return to bottom
-        m.dir = 1;
-      } else if (m.dir > 0 && m.seg >= m.idleTarget) {
-        m.seg = m.idleTarget;
-        m.dir = 0;
-      }
-      anyClimbing = true;
+      if (m.dir < 0 && m.seg <= m.target) { m.seg = m.target; m.target = SEGS; m.dir = 1; }
+      else if (m.dir > 0 && m.seg >= m.target) { m.seg = m.target; m.dir = 0; }
+      climbing = true;
     });
-    if (anyClimbing) wake();
+    if (climbing) wake();
   }
 
-  function rgba(hex, a) {
-    const r = parseInt(hex.slice(1,3),16);
-    const g = parseInt(hex.slice(3,5),16);
-    const b = parseInt(hex.slice(5,7),16);
-    return `rgba(${r},${g},${b},${a})`;
-  }
-
-  function drawRoundRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x+r, y);
-    ctx.lineTo(x+w-r, y); ctx.arcTo(x+w,y, x+w,y+r, r);
-    ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w,y+h, x+w-r,y+h, r);
-    ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h, x,y+h-r, r);
-    ctx.lineTo(x, y+r); ctx.arcTo(x,y, x+r,y, r);
-    ctx.closePath();
+  function drawMonkey(mx, my, col) {
+    const c1 = rgba(col, 0.88), c2 = rgba(col, 0.32), c3 = rgba(col, 0.55);
+    // arms gripping rope
+    ctx.strokeStyle = c1; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(mx-6, my-6); ctx.lineTo(mx, my-13); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mx+6, my-6); ctx.lineTo(mx, my-13); ctx.stroke();
+    // body
+    ctx.beginPath(); ctx.ellipse(mx, my+10, 9, 11, 0, 0, Math.PI*2);
+    ctx.fillStyle = c1; ctx.fill();
+    // belly
+    ctx.beginPath(); ctx.ellipse(mx, my+12, 5, 7, 0, 0, Math.PI*2);
+    ctx.fillStyle = c2; ctx.fill();
+    // legs
+    ctx.strokeStyle = c1; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(mx-5, my+20); ctx.lineTo(mx-8, my+28); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mx+5, my+20); ctx.lineTo(mx+8, my+28); ctx.stroke();
+    // feet
+    [-8,8].forEach(fx => {
+      ctx.beginPath(); ctx.ellipse(mx+fx, my+29, 4, 2.5, fx<0?-0.3:0.3, 0, Math.PI*2);
+      ctx.fillStyle = c1; ctx.fill();
+    });
+    // head
+    ctx.beginPath(); ctx.arc(mx, my-4, 13, 0, Math.PI*2);
+    ctx.fillStyle = c1; ctx.fill();
+    // ears
+    [-13,13].forEach(ex => {
+      ctx.beginPath(); ctx.arc(mx+ex, my-8, 5, 0, Math.PI*2); ctx.fillStyle = c1; ctx.fill();
+      ctx.beginPath(); ctx.arc(mx+ex, my-8, 2.5, 0, Math.PI*2); ctx.fillStyle = c3; ctx.fill();
+    });
+    // muzzle
+    ctx.beginPath(); ctx.ellipse(mx, my+2, 7.5, 6, 0, 0, Math.PI*2);
+    ctx.fillStyle = c2; ctx.fill();
+    // eyes
+    [-4.5,4.5].forEach(ex => {
+      ctx.beginPath(); ctx.arc(mx+ex, my-7, 3, 0, Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+      ctx.beginPath(); ctx.arc(mx+ex+0.5, my-6.5, 1.5, 0, Math.PI*2); ctx.fillStyle='#111'; ctx.fill();
+    });
+    // nostrils
+    [-2,2].forEach(nx => { ctx.beginPath(); ctx.arc(mx+nx, my+1, 1, 0, Math.PI*2); ctx.fillStyle=rgba(col,0.6); ctx.fill(); });
+    // smile
+    ctx.beginPath(); ctx.arc(mx, my+3, 4, 0.15, Math.PI-0.15);
+    ctx.strokeStyle = rgba(col,0.8); ctx.lineWidth=1.5; ctx.stroke();
   }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const tagBg  = isDark ? '#0a0a0a' : '#ffffff';
-
-    // first-load hint: "drag ropes · click monkeys"
-    if (showHint) {
-      ctx.save();
-      ctx.font = '500 10px "JetBrains Mono",monospace';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = rgba(COLORS[1], 0.45);
-      ctx.fillText('DRAG MONKEYS UP  ·  SWING ROPES', W / 2, 28);
-      ctx.restore();
-    }
-
     ropes.forEach((pts, ri) => {
-      const isHovered = hoveredRope === ri;
-      const col = COLORS[ri];
-      const alpha = isHovered ? 0.95 : 0.75;
-
+      const col  = COLORS[ri];
+      const hovd = hovRope === ri;
       // rope
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < SEGS - 1; i++) {
-        const mx = (pts[i].x + pts[i+1].x) / 2;
-        const my = (pts[i].y + pts[i+1].y) / 2;
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < SEGS-1; i++) {
+        const mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2;
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
       }
       ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = rgba(col, alpha);
-      ctx.lineWidth = isHovered ? 2.2 : 1.5;
-      ctx.stroke();
-
-      // pin
-      ctx.beginPath();
-      ctx.arc(pts[0].x, 3, 3.5, 0, Math.PI*2);
+      ctx.strokeStyle = rgba(col, hovd ? 0.95 : 0.7);
+      ctx.lineWidth = hovd ? 2.5 : 1.5; ctx.lineCap='round'; ctx.stroke();
+      // pin dot
+      ctx.beginPath(); ctx.arc(pts[0].x, 3, 3.5, 0, Math.PI*2);
       ctx.fillStyle = col; ctx.fill();
-
-      // monkey position along rope (interpolated)
-      const m   = monkeys[ri];
-      const si  = Math.min(Math.floor(m.seg), SEGS - 1);
-      const sf  = m.seg - si;
-      const pa  = pts[si], pb = pts[Math.min(si + 1, SEGS)];
-      const mx  = pa.x + (pb.x - pa.x) * sf;
-      const my  = pa.y + (pb.y - pa.y) * sf;
-
-      const c1  = rgba(col, 0.85);  // main body colour
-      const c2  = rgba(col, 0.35);  // face plate / belly
-      const c3  = rgba(col, 0.55);  // inner ear
-
-      // arms gripping rope
-      ctx.strokeStyle = c1; ctx.lineWidth = 2; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(mx - 6, my - 8); ctx.lineTo(mx, my - 14); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(mx + 6, my - 8); ctx.lineTo(mx, my - 14); ctx.stroke();
-
-      // body
-      ctx.beginPath();
-      ctx.ellipse(mx, my + 10, 9, 11, 0, 0, Math.PI*2);
-      ctx.fillStyle = c1; ctx.fill();
-
-      // belly
-      ctx.beginPath();
-      ctx.ellipse(mx, my + 12, 5.5, 7, 0, 0, Math.PI*2);
-      ctx.fillStyle = c2; ctx.fill();
-
-      // legs
-      ctx.strokeStyle = c1; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(mx - 5, my + 20); ctx.lineTo(mx - 8, my + 29); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(mx + 5, my + 20); ctx.lineTo(mx + 8, my + 29); ctx.stroke();
-
-      // feet
-      [-8, 8].forEach(fx => {
-        ctx.beginPath();
-        ctx.ellipse(mx + fx, my + 30, 4, 2.5, fx < 0 ? -0.3 : 0.3, 0, Math.PI*2);
-        ctx.fillStyle = c1; ctx.fill();
-      });
-
-      // head
-      ctx.beginPath();
-      ctx.arc(mx, my - 4, 13, 0, Math.PI*2);
-      ctx.fillStyle = c1; ctx.fill();
-
-      // ears
-      [-13, 13].forEach(ex => {
-        ctx.beginPath();
-        ctx.arc(mx + ex, my - 8, 5, 0, Math.PI*2);
-        ctx.fillStyle = c1; ctx.fill();
-        ctx.beginPath();
-        ctx.arc(mx + ex, my - 8, 2.5, 0, Math.PI*2);
-        ctx.fillStyle = c3; ctx.fill();
-      });
-
-      // face plate (muzzle area)
-      ctx.beginPath();
-      ctx.ellipse(mx, my + 2, 7.5, 6, 0, 0, Math.PI*2);
-      ctx.fillStyle = c2; ctx.fill();
-
-      // eyes — white + pupil
-      [-4.5, 4.5].forEach(ex => {
-        ctx.beginPath(); ctx.arc(mx + ex, my - 7, 3, 0, Math.PI*2);
-        ctx.fillStyle = '#fff'; ctx.fill();
-        ctx.beginPath(); ctx.arc(mx + ex + 0.5, my - 6.5, 1.5, 0, Math.PI*2);
-        ctx.fillStyle = '#111'; ctx.fill();
-      });
-
-      // nostrils
-      [-2, 2].forEach(nx => {
-        ctx.beginPath(); ctx.arc(mx + nx, my + 1, 1, 0, Math.PI*2);
-        ctx.fillStyle = rgba(col, 0.7); ctx.fill();
-      });
-
-      // smile
-      ctx.beginPath();
-      ctx.arc(mx, my + 3, 4, 0.15, Math.PI - 0.15);
-      ctx.strokeStyle = rgba(col, 0.8); ctx.lineWidth = 1.5; ctx.stroke();
-
-      // label below
-      ctx.font = '500 8px "JetBrains Mono",monospace';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = rgba(col, 0.55);
-      ctx.fillText(LABELS[ri].toUpperCase(), mx, my + 44);
+      // monkey
+      const { x:mx, y:my } = monkeyPos(ri);
+      drawMonkey(mx, my, col);
     });
   }
 
   function scheduleIdleClimb() {
     if (idleTimer) return;
-    const delay = 10000 + Math.random() * 5000;
     idleTimer = setTimeout(() => {
       idleTimer = null;
-      monkeys.forEach(m => {
-        // climb up to ~30% then back down
-        m.idleTarget = Math.floor(SEGS * 0.3);
-        m.dir = -1;
-      });
+      monkeys.forEach(m => { m.target = Math.floor(SEGS*0.25); m.dir = -1; });
       wake();
-    }, delay);
+    }, 10000 + Math.random()*5000);
   }
 
   function loop() {
-    tick();
-    draw();
-    if (!dragging && totalEnergy() < SLEEP) {
-      sleeping = true;
-      rafId = null;
-      scheduleIdleClimb();
-      return;
+    tick(); draw();
+    if (!dragging && energy() < SLEEP) {
+      sleeping = true; rafId = null;
+      scheduleIdleClimb(); return;
     }
     rafId = requestAnimationFrame(loop);
   }
 
   function wake() {
-    if (sleeping) { sleeping = false; rafId = requestAnimationFrame(loop); }
-    else if (!rafId) { rafId = requestAnimationFrame(loop); }
+    if (sleeping) { sleeping=false; rafId=requestAnimationFrame(loop); }
+    else if (!rafId) { rafId=requestAnimationFrame(loop); }
   }
 
-  // mouse / touch drag via window
   function clientPos(e) {
-    const r  = canvas.getBoundingClientRect();
-    const ex = e.touches ? e.touches[0].clientX : e.clientX;
-    const ey = e.touches ? e.touches[0].clientY : e.clientY;
-    return { cx: ex - r.left, cy: ey - r.top };
+    const r = canvas.getBoundingClientRect();
+    return { cx:(e.touches?e.touches[0].clientX:e.clientX)-r.left,
+             cy:(e.touches?e.touches[0].clientY:e.clientY)-r.top };
   }
 
-  function cancelIdleTimer() {
-    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
-  }
-
-  function monkeyXY(ri) {
-    const m  = monkeys[ri];
-    const si = Math.min(Math.floor(m.seg), SEGS - 1);
-    const sf = m.seg - si;
-    const pa = ropes[ri][si], pb = ropes[ri][Math.min(si + 1, SEGS)];
-    return { x: pa.x + (pb.x - pa.x) * sf, y: pa.y + (pb.y - pa.y) * sf };
-  }
-
-  function nearestSeg(ri, cx, cy) {
-    let best = Infinity, bestPi = SEGS;
-    ropes[ri].forEach((p, pi) => {
-      if (pi === 0) return;
-      const d = Math.hypot(p.x - cx, p.y - cy);
-      if (d < best) { best = d; bestPi = pi; }
-    });
-    return bestPi;
-  }
-
-  function tryGrabMonkey(cx, cy) {
-    for (let ri = 0; ri < ropes.length; ri++) {
-      const { x: mx, y: my } = monkeyXY(ri);
-      if (Math.hypot(cx - mx, cy - my) < MONKEY_R + 6) {
-        monkeyDrag = ri;
-        monkeys[ri].dir = 0; // stop auto-climb while dragging
-        wake();
-        return true;
-      }
-    }
-    return false;
-  }
-
+  // drag any part of rope to swing it
   canvas.addEventListener('mousedown', e => {
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer=null; }
     const { cx, cy } = clientPos(e);
-    cancelIdleTimer();
-    if (tryGrabMonkey(cx, cy)) { e.preventDefault(); return; }
-    let best = 40, found = null;
-    ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
-      if (pi === 0) return;
-      const d = Math.hypot(p.x-cx, p.y-cy);
-      if (d < best) { best=d; found={ri,pi}; }
+    let best=50, found=null;
+    ropes.forEach((pts,ri) => pts.forEach((p,pi) => {
+      if (pi===0) return;
+      const d=Math.hypot(p.x-cx, p.y-cy);
+      if (d<best) { best=d; found={ri,pi}; }
     }));
-    if (found) { dragging=found; wake(); e.preventDefault(); }
-  }, { passive: false });
+    if (found) { dragging=found; canvas.style.cursor='grabbing'; wake(); e.preventDefault(); }
+  }, { passive:false });
 
   canvas.addEventListener('touchstart', e => {
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer=null; }
     const { cx, cy } = clientPos(e);
-    cancelIdleTimer();
-    if (tryGrabMonkey(cx, cy)) { e.preventDefault(); return; }
-    let best = 50, found = null;
-    ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
-      if (pi === 0) return;
-      const d = Math.hypot(p.x-cx, p.y-cy);
-      if (d < best) { best=d; found={ri,pi}; }
+    let best=60, found=null;
+    ropes.forEach((pts,ri) => pts.forEach((p,pi) => {
+      if (pi===0) return;
+      const d=Math.hypot(p.x-cx, p.y-cy);
+      if (d<best) { best=d; found={ri,pi}; }
     }));
     if (found) { dragging=found; wake(); e.preventDefault(); }
-  }, { passive: false });
+  }, { passive:false });
 
   canvas.addEventListener('mousemove', e => {
     const { cx, cy } = clientPos(e);
-
-    // monkey drag — slide monkey up/down rope to nearest segment
-    if (monkeyDrag >= 0) {
-      monkeys[monkeyDrag].seg = nearestSeg(monkeyDrag, cx, cy);
-      wake();
-      return;
-    }
-
     if (dragging) {
-      const p = ropes[dragging.ri][dragging.pi];
+      const p=ropes[dragging.ri][dragging.pi];
       p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
       return;
     }
-
-    // hover detection for cursor feedback
-    let newHovRope = -1, newHovMon = -1;
-    ropes.forEach((pts, ri) => {
-      const { x: mx, y: my } = monkeyXY(ri);
-      if (Math.hypot(cx - mx, cy - my) < MONKEY_R + 4) { newHovMon = ri; return; }
-      for (let pi = 1; pi <= SEGS; pi++) {
-        if (Math.hypot(pts[pi].x - cx, pts[pi].y - cy) < 18) { newHovRope = ri; break; }
-      }
+    // hover feedback
+    let h=-1;
+    ropes.forEach((pts,ri) => {
+      for (let pi=1; pi<=SEGS; pi++)
+        if (Math.hypot(pts[pi].x-cx, pts[pi].y-cy)<22) { h=ri; break; }
     });
-
-    if (newHovMon !== hoverMon || newHovRope !== hoveredRope) {
-      hoverMon    = newHovMon;
-      hoveredRope = newHovRope;
-      canvas.style.cursor = newHovMon >= 0 ? 'grab' : newHovRope >= 0 ? 'grab' : 'default';
-      wake();
-    }
+    if (h!==hovRope) { hovRope=h; canvas.style.cursor=h>=0?'grab':'default'; wake(); }
   });
 
   window.addEventListener('mousemove', e => {
     if (!dragging) return;
     const { cx, cy } = clientPos(e);
-    const p = ropes[dragging.ri][dragging.pi];
+    const p=ropes[dragging.ri][dragging.pi];
     p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
   });
 
   window.addEventListener('touchmove', e => {
     if (!dragging) return;
     const { cx, cy } = clientPos(e);
-    const p = ropes[dragging.ri][dragging.pi];
+    const p=ropes[dragging.ri][dragging.pi];
     p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
     e.preventDefault();
-  }, { passive: false });
+  }, { passive:false });
 
-  function onRelease() {
-    dragging = null;
-    if (monkeyDrag >= 0) {
-      // release → slide back down to bottom
-      const m = monkeys[monkeyDrag];
-      m.idleTarget = SEGS;
-      m.dir = 1;
-      monkeyDrag = -1;
-      canvas.style.cursor = 'default';
-      wake();
-    }
-  }
-  window.addEventListener('mouseup',  onRelease);
-  window.addEventListener('touchend', onRelease);
+  window.addEventListener('mouseup',  () => { dragging=null; canvas.style.cursor=hovRope>=0?'grab':'default'; });
+  window.addEventListener('touchend', () => { dragging=null; });
 
   resize();
   window.addEventListener('resize', () => { resize(); wake(); });
-
-  // draw initial static frame
   draw();
-
-  // hide hint after 4s
-  setTimeout(() => { showHint = false; draw(); }, 4000);
 });
