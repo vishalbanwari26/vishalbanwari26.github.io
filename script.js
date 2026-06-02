@@ -376,9 +376,10 @@ window.addEventListener('load', function() {
   let rafId       = null;
   let sleeping    = false;
   let idleTimer   = null;
-  let hoveredRope = -1;   // index of rope cursor is near (-1 = none)
-  let hoverMon    = -1;   // index of monkey cursor is near
-  let showHint    = true; // first-load hint
+  let hoveredRope  = -1;
+  let hoverMon     = -1;
+  let monkeyDrag   = -1;  // rope index being dragged by monkey
+  let showHint     = true;
 
   // monkey state per rope: seg = float position along rope (0=top, SEGS=bottom)
   const monkeys = LABELS.map(() => ({ seg: SEGS, dir: 0, idleTarget: SEGS }));
@@ -516,7 +517,7 @@ window.addEventListener('load', function() {
       ctx.font = '500 10px "JetBrains Mono",monospace';
       ctx.textAlign = 'center';
       ctx.fillStyle = rgba(COLORS[1], 0.45);
-      ctx.fillText('↕ CLICK MONKEYS  ·  DRAG ROPES', W / 2, 28);
+      ctx.fillText('DRAG MONKEYS UP  ·  SWING ROPES', W / 2, 28);
       ctx.restore();
     }
 
@@ -680,14 +681,22 @@ window.addEventListener('load', function() {
     return { x: pa.x + (pb.x - pa.x) * sf, y: pa.y + (pb.y - pa.y) * sf };
   }
 
-  function tryClimbMonkey(cx, cy) {
+  function nearestSeg(ri, cx, cy) {
+    let best = Infinity, bestPi = SEGS;
+    ropes[ri].forEach((p, pi) => {
+      if (pi === 0) return;
+      const d = Math.hypot(p.x - cx, p.y - cy);
+      if (d < best) { best = d; bestPi = pi; }
+    });
+    return bestPi;
+  }
+
+  function tryGrabMonkey(cx, cy) {
     for (let ri = 0; ri < ropes.length; ri++) {
       const { x: mx, y: my } = monkeyXY(ri);
-      if (Math.hypot(cx - mx, cy - my) < MONKEY_R) {
-        const m = monkeys[ri];
-        // always scurry up fast, then return — predictable every time
-        m.idleTarget = Math.max(1, Math.floor(SEGS * 0.12));
-        m.dir = -1;
+      if (Math.hypot(cx - mx, cy - my) < MONKEY_R + 6) {
+        monkeyDrag = ri;
+        monkeys[ri].dir = 0; // stop auto-climb while dragging
         wake();
         return true;
       }
@@ -698,7 +707,7 @@ window.addEventListener('load', function() {
   canvas.addEventListener('mousedown', e => {
     const { cx, cy } = clientPos(e);
     cancelIdleTimer();
-    if (tryClimbMonkey(cx, cy)) { e.preventDefault(); return; }
+    if (tryGrabMonkey(cx, cy)) { e.preventDefault(); return; }
     let best = 40, found = null;
     ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
       if (pi === 0) return;
@@ -711,7 +720,7 @@ window.addEventListener('load', function() {
   canvas.addEventListener('touchstart', e => {
     const { cx, cy } = clientPos(e);
     cancelIdleTimer();
-    if (tryClimbMonkey(cx, cy)) { e.preventDefault(); return; }
+    if (tryGrabMonkey(cx, cy)) { e.preventDefault(); return; }
     let best = 50, found = null;
     ropes.forEach((pts, ri) => pts.forEach((p, pi) => {
       if (pi === 0) return;
@@ -724,13 +733,20 @@ window.addEventListener('load', function() {
   canvas.addEventListener('mousemove', e => {
     const { cx, cy } = clientPos(e);
 
+    // monkey drag — slide monkey up/down rope to nearest segment
+    if (monkeyDrag >= 0) {
+      monkeys[monkeyDrag].seg = nearestSeg(monkeyDrag, cx, cy);
+      wake();
+      return;
+    }
+
     if (dragging) {
       const p = ropes[dragging.ri][dragging.pi];
       p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
       return;
     }
 
-    // hover detection
+    // hover detection for cursor feedback
     let newHovRope = -1, newHovMon = -1;
     ropes.forEach((pts, ri) => {
       const { x: mx, y: my } = monkeyXY(ri);
@@ -743,7 +759,7 @@ window.addEventListener('load', function() {
     if (newHovMon !== hoverMon || newHovRope !== hoveredRope) {
       hoverMon    = newHovMon;
       hoveredRope = newHovRope;
-      canvas.style.cursor = newHovMon >= 0 ? 'pointer' : newHovRope >= 0 ? 'grab' : 'default';
+      canvas.style.cursor = newHovMon >= 0 ? 'grab' : newHovRope >= 0 ? 'grab' : 'default';
       wake();
     }
   });
@@ -763,8 +779,20 @@ window.addEventListener('load', function() {
     e.preventDefault();
   }, { passive: false });
 
-  window.addEventListener('mouseup',  () => { dragging=null; });
-  window.addEventListener('touchend', () => { dragging=null; });
+  function onRelease() {
+    dragging = null;
+    if (monkeyDrag >= 0) {
+      // release → slide back down to bottom
+      const m = monkeys[monkeyDrag];
+      m.idleTarget = SEGS;
+      m.dir = 1;
+      monkeyDrag = -1;
+      canvas.style.cursor = 'default';
+      wake();
+    }
+  }
+  window.addEventListener('mouseup',  onRelease);
+  window.addEventListener('touchend', onRelease);
 
   resize();
   window.addEventListener('resize', () => { resize(); wake(); });
