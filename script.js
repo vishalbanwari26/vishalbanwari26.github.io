@@ -71,7 +71,62 @@ window.addEventListener('DOMContentLoaded', () => {
   initVanillaTilt();
   initNavBurger();
   initHobbies();
+  initTimelineWave();
 });
+
+function initTimelineWave() {
+  const timeline = document.querySelector('.timeline');
+  if (!timeline) return;
+
+  const nodes = Array.from(timeline.querySelectorAll('.timeline-node'));
+  if (nodes.length < 2) return;
+
+  // create SVG overlay
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('timeline-wave-svg');
+  svg.setAttribute('aria-hidden', 'true');
+  timeline.appendChild(svg);
+
+  function buildWave() {
+    svg.innerHTML = '';
+    const tRect = timeline.getBoundingClientRect();
+
+    // gather dot centre positions relative to timeline
+    const pts = nodes.map(n => {
+      const r = n.getBoundingClientRect();
+      return {
+        x: r.left + r.width / 2 - tRect.left,
+        y: r.top  + r.height / 2 - tRect.top
+      };
+    });
+
+    // draw one wide S-curve between each consecutive pair
+    const AMP = 60; // horizontal swing width
+    let d = '';
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const dir = i % 2 === 0 ? 1 : -1; // alternate direction
+      const cp1x = a.x + AMP * dir;
+      const cp1y = a.y + (b.y - a.y) * 0.35;
+      const cp2x = b.x - AMP * dir;
+      const cp2y = a.y + (b.y - a.y) * 0.65;
+      d += `M ${a.x} ${a.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${b.x} ${b.y} `;
+    }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d.trim());
+    path.setAttribute('stroke', '#ff6b35');
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-opacity', '0.4');
+    path.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(path);
+  }
+
+  // build after layout settles
+  setTimeout(buildWave, 200);
+  window.addEventListener('resize', buildWave);
+}
 
 // ────────────────────────────────────────
 // Theme Toggle
@@ -389,8 +444,8 @@ window.addEventListener('load', function() {
   const hero = document.getElementById('hero');
   function updateCanvasVisibility() {
     if (!hero) return;
-    const bottom = hero.getBoundingClientRect().bottom;
-    const show = bottom > 80; // hide when hero bottom is near/above viewport top
+    // hide as soon as the hero is more than 80% scrolled past
+    const show = window.scrollY < hero.offsetHeight * 0.8;
     canvas.style.opacity = show ? '1' : '0';
     canvas.style.pointerEvents = show ? 'auto' : 'none';
   }
