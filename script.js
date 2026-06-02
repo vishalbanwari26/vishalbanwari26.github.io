@@ -81,35 +81,44 @@ function initTimelineWave() {
   const nodes = Array.from(timeline.querySelectorAll('.timeline-node'));
   if (nodes.length < 2) return;
 
-  // create SVG overlay
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('timeline-wave-svg');
   svg.setAttribute('aria-hidden', 'true');
   timeline.appendChild(svg);
 
+  function getLayoutPos(el, ancestor) {
+    // use offsetTop/offsetLeft to avoid GSAP transform offsets
+    let top = 0, left = 0, cur = el;
+    while (cur && cur !== ancestor) {
+      top  += cur.offsetTop;
+      left += cur.offsetLeft;
+      cur   = cur.offsetParent;
+    }
+    return { x: left + el.offsetWidth / 2, y: top + el.offsetHeight / 2 };
+  }
+
   function buildWave() {
     svg.innerHTML = '';
-    const tRect = timeline.getBoundingClientRect();
+    const W = timeline.offsetWidth;
+    const H = timeline.offsetHeight;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
 
-    // gather dot centre positions relative to timeline
-    const pts = nodes.map(n => {
-      const r = n.getBoundingClientRect();
-      return {
-        x: r.left + r.width / 2 - tRect.left,
-        y: r.top  + r.height / 2 - tRect.top
-      };
-    });
+    const cx = W / 2; // centre X — all dots are here
+    const AMP = W * 0.18; // wide horizontal swing
 
-    // draw one wide S-curve between each consecutive pair
-    const AMP = 60; // horizontal swing width
+    const pts = nodes.map(n => getLayoutPos(n, timeline));
+
     let d = '';
     for (let i = 0; i < pts.length - 1; i++) {
       const a = pts[i], b = pts[i + 1];
-      const dir = i % 2 === 0 ? 1 : -1; // alternate direction
-      const cp1x = a.x + AMP * dir;
-      const cp1y = a.y + (b.y - a.y) * 0.35;
-      const cp2x = b.x - AMP * dir;
-      const cp2y = a.y + (b.y - a.y) * 0.65;
+      // alternate swing direction so it weaves
+      const dir = i % 2 === 0 ? 1 : -1;
+      const cp1x = cx + AMP * dir;
+      const cp1y = a.y + (b.y - a.y) * 0.33;
+      const cp2x = cx - AMP * dir;
+      const cp2y = a.y + (b.y - a.y) * 0.67;
       d += `M ${a.x} ${a.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${b.x} ${b.y} `;
     }
 
@@ -118,13 +127,12 @@ function initTimelineWave() {
     path.setAttribute('stroke', '#ff6b35');
     path.setAttribute('stroke-width', '1.5');
     path.setAttribute('fill', 'none');
-    path.setAttribute('stroke-opacity', '0.4');
+    path.setAttribute('stroke-opacity', '0.45');
     path.setAttribute('stroke-linecap', 'round');
     svg.appendChild(path);
   }
 
-  // build after layout settles
-  setTimeout(buildWave, 200);
+  setTimeout(buildWave, 400);
   window.addEventListener('resize', buildWave);
 }
 
@@ -683,14 +691,18 @@ window.addEventListener('load', function() {
       p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
       return;
     }
-    let h=-1;
+    let h=-1, onMonkey=false;
     ropes.forEach((pts,ri) => {
       const { x, y } = monkeyPos(ri);
-      if (Math.hypot(cx-x, cy-y) < 32) { h=ri; return; }
+      if (Math.hypot(cx-x, cy-y) < 32) { h=ri; onMonkey=true; return; }
       for (let pi=1; pi<=SEGS; pi++)
-        if (Math.hypot(pts[pi].x-cx, pts[pi].y-cy)<22) { h=ri; break; }
+        if (Math.hypot(pts[pi].x-cx, pts[pi].y-cy)<18) { h=ri; break; }
     });
-    if (h!==hovRope) { hovRope=h; wake(); }
+    if (h!==hovRope) {
+      hovRope=h;
+      canvas.style.cursor = onMonkey ? 'grab' : h>=0 ? 'crosshair' : 'default';
+      wake();
+    }
   });
 
   window.addEventListener('mousemove', e => {
