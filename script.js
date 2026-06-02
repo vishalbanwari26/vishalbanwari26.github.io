@@ -384,8 +384,16 @@ window.addEventListener('load', function() {
     return `rgba(${r},${g},${b},${a})`;
   }
 
+  // show/hide canvas pointer events based on hero visibility
+  const hero = document.getElementById('hero');
+  const heroObs = new IntersectionObserver(entries => {
+    const visible = entries[0].isIntersecting;
+    canvas.style.pointerEvents = visible ? 'auto' : 'none';
+    canvas.style.opacity = visible ? '1' : '0';
+  }, { threshold: 0.05 });
+  if (hero) heroObs.observe(hero);
+
   function resize() {
-    // full-width canvas but 1:1 pixels (no DPR) for performance
     W = window.innerWidth;
     H = window.innerHeight;
     canvas.width  = W;
@@ -394,7 +402,6 @@ window.addEventListener('load', function() {
     canvas.style.height = H + 'px';
 
     segLen = (H * 0.62) / SEGS;
-    // anchors in the right 30% of the viewport
     const base = W * 0.73, gap = W * 0.09;
     anchors = [base, base + gap, base + gap * 2];
 
@@ -578,7 +585,7 @@ window.addEventListener('load', function() {
       const d=Math.hypot(p.x-cx, p.y-cy);
       if (d<best) { best=d; found={ri,pi}; }
     }));
-    if (found) { dragging=found; canvas.style.cursor='grabbing'; wake(); e.preventDefault(); }
+    if (found) { dragging=found; wake(); e.preventDefault(); }
   }, { passive:false });
 
   canvas.addEventListener('touchstart', e => {
@@ -606,7 +613,7 @@ window.addEventListener('load', function() {
       for (let pi=1; pi<=SEGS; pi++)
         if (Math.hypot(pts[pi].x-cx, pts[pi].y-cy)<22) { h=ri; break; }
     });
-    if (h!==hovRope) { hovRope=h; canvas.style.cursor=h>=0?'grab':'default'; wake(); }
+    if (h!==hovRope) { hovRope=h; wake(); }
   });
 
   window.addEventListener('mousemove', e => {
@@ -624,7 +631,7 @@ window.addEventListener('load', function() {
     e.preventDefault();
   }, { passive:false });
 
-  window.addEventListener('mouseup',  () => { dragging=null; canvas.style.cursor=hovRope>=0?'grab':'default'; });
+  window.addEventListener('mouseup',  () => { dragging=null; });
   window.addEventListener('touchend', () => { dragging=null; });
 
   resize();
