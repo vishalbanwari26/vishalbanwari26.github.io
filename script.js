@@ -5,6 +5,12 @@
 // ── Featured Projects (top 6 only) ──
 const ALL_PROJECTS = [
   {
+    id: 'cortex', label: 'Cortex', domain: 'Agents', year: '2025',
+    description: 'Cognitive-loop orchestrator for embodied agents. Perceives a scene with a vision-language model, decomposes a natural-language goal into a multi-step plan, dispatches steps through a modular skill registry, and adapts in real time when a step fails. Provider-agnostic: the same loop runs on Groq, Anthropic, or a deterministic mock with no code changes.',
+    techs: ['Python', 'LLMs', 'Multi-Agent', 'Vision', 'Groq'],
+    url: 'https://github.com/vishalbanwari26/cortex'
+  },
+  {
     id: 'hill', label: 'HILL Framework', domain: 'Research', year: '2025',
     description: 'Human in the Latent Loop. An interactive framework that lets users incorporate human intuition into model training by reshaping latent space representations via a distillation-inspired approach.',
     techs: ['Python', 'PyTorch', 'Human-AI', 'Visualization'],
@@ -43,6 +49,7 @@ const ALL_PROJECTS = [
 ];
 
 const DOMAIN_COLORS = {
+  'Agents':         '#56d4dc',
   'LLM':            '#00d4ff',
   'Computer Vision':'#8b5cf6',
   'Deep Learning':  '#f59e0b',
