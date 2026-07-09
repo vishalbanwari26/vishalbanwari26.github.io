@@ -5,6 +5,12 @@
 // ── Featured Projects (top 6 only) ──
 const ALL_PROJECTS = [
   {
+    id: 'mnemos', label: 'mnemos', domain: 'Agents', year: '2026',
+    description: 'Persistent memory framework for LLM agents. Episodic and semantic memory, retrieval that adapts its own similarity/recency strategy per user, and a reflection engine that merges, decays, and forgets stale facts with a full audit trail. Three interchangeable storage backends (Postgres/pgvector, Qdrant, Neo4j) behind one interface, a FastAPI backend, a React dashboard, and a benchmark that measures recall over simulated time instead of just demoing well.',
+    techs: ['Python', 'FastAPI', 'React', 'Postgres', 'Neo4j'],
+    url: 'https://github.com/vishalbanwari26/mnemos'
+  },
+  {
     id: 'cortex', label: 'Cortex', domain: 'Agents', year: '2025',
     description: 'Cognitive-loop orchestrator for embodied agents. Perceives a scene with a vision-language model, decomposes a natural-language goal into a multi-step plan, dispatches steps through a modular skill registry, and adapts in real time when a step fails. Provider-agnostic: the same loop runs on Groq, Anthropic, or a deterministic mock with no code changes.',
     techs: ['Python', 'LLMs', 'Multi-Agent', 'Vision', 'Groq'],
