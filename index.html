@@ -11,9 +11,48 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body>
+  <!-- Loader -->
+  <div id="loader" class="loader" aria-hidden="true">
+    <svg class="loader-web" viewBox="0 0 300 300">
+      <g class="web-spokes" stroke="currentColor" fill="none">
+        <line x1="150" y1="150" x2="150" y2="8"/>
+        <line x1="150" y1="150" x2="150" y2="292"/>
+        <line x1="150" y1="150" x2="8" y2="150"/>
+        <line x1="150" y1="150" x2="292" y2="150"/>
+        <line x1="150" y1="150" x2="45" y2="45"/>
+        <line x1="150" y1="150" x2="255" y2="45"/>
+        <line x1="150" y1="150" x2="45" y2="255"/>
+        <line x1="150" y1="150" x2="255" y2="255"/>
+      </g>
+      <g class="web-rings" stroke="currentColor" fill="none">
+        <polygon points="150,45 224,76 255,150 224,224 150,255 76,224 45,150 76,76"/>
+        <polygon points="150,88 191,109 212,150 191,191 150,212 109,191 88,150 109,109"/>
+        <polygon points="150,120 168,132 180,150 168,168 150,180 132,168 120,150 132,132"/>
+      </g>
+    </svg>
+    <div class="loader-thread"></div>
+    <svg class="loader-spider" viewBox="0 0 60 60">
+      <g class="spider-legs" stroke="#161018" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M22 26 L2 10"/>
+        <path d="M22 28 L0 22"/>
+        <path d="M22 30 L2 34"/>
+        <path d="M22 32 L6 44"/>
+        <path d="M38 26 L58 10"/>
+        <path d="M38 28 L60 22"/>
+        <path d="M38 30 L58 34"/>
+        <path d="M38 32 L54 44"/>
+      </g>
+      <ellipse cx="30" cy="34" rx="11" ry="9" fill="#ff2e3d"/>
+      <circle cx="30" cy="20" r="7" fill="#161018"/>
+      <circle cx="27" cy="18" r="1.5" fill="#fff"/>
+      <circle cx="33" cy="18" r="1.5" fill="#fff"/>
+    </svg>
+    <p class="loader-caption">spinning things up&hellip;</p>
+  </div>
+
   <!-- Ropes canvas — body level so it's always on top of everything -->
   <canvas id="ropes-canvas" aria-hidden="true"></canvas>
   <!-- Noise grain overlay -->
@@ -53,6 +92,18 @@
           <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
           <line x1="1" y1="12" x2="3" y2="12"/>
           <line x1="21" y1="12" x2="23" y2="12"/>
+        </svg>
+        <!-- Party popper (shown in party mode) -->
+        <svg class="icon-party" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5.8 11.3 2 22l10.7-3.79"/>
+          <path d="M4 3h.01"/>
+          <path d="M22 8h.01"/>
+          <path d="M15 2h.01"/>
+          <path d="M22 20h.01"/>
+          <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/>
+          <path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/>
+          <path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.24v.53"/>
+          <path d="M11 13c1.93-.75 3.4-2.42 3.9-4.5"/>
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
         </svg>

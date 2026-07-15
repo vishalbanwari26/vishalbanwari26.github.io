@@ -66,6 +66,8 @@ const DOMAIN_COLORS = {
 // Init
 // ────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  initLoader();
+
   gsap.set([
     '.hero-badge', '.hero-tagline', '.hero-subtitle', '.hero-cta',
     '.hero-scroll-hint', '.hero-stats', '.hero-divider', '.hero-marquee'
@@ -150,19 +152,92 @@ function initTimelineWave() {
 }
 
 // ────────────────────────────────────────
+// Loader
+// ────────────────────────────────────────
+function initLoader() {
+  const loader = document.getElementById('loader');
+  if (!loader) return;
+  const MIN_VISIBLE = 2000;
+  const start = performance.now();
+
+  const hide = () => {
+    const elapsed = performance.now() - start;
+    const wait = Math.max(0, MIN_VISIBLE - elapsed);
+    setTimeout(() => {
+      loader.classList.add('loader-hide');
+      setTimeout(() => loader.remove(), 600);
+    }, wait);
+  };
+
+  if (document.readyState === 'complete') hide();
+  else window.addEventListener('load', hide);
+}
+
+// ────────────────────────────────────────
 // Theme Toggle
 // ────────────────────────────────────────
 function initThemeToggle() {
   const btn = document.getElementById('themeToggle');
   if (!btn) return;
+  const order = ['dark', 'light', 'party'];
   const stored = localStorage.getItem('vb-theme');
-  if (stored === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  if (order.includes(stored)) document.documentElement.setAttribute('data-theme', stored);
+  syncPartyConfetti();
 
   btn.addEventListener('click', () => {
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
-    localStorage.setItem('vb-theme', isLight ? 'dark' : 'light');
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('vb-theme', next);
+    syncPartyConfetti();
   });
+}
+
+// ────────────────────────────────────────
+// Party Confetti
+// ────────────────────────────────────────
+let partyConfettiInterval = null;
+
+function syncPartyConfetti() {
+  const isParty = document.documentElement.getAttribute('data-theme') === 'party';
+  if (isParty && !partyConfettiInterval) {
+    startPartyConfetti();
+  } else if (!isParty && partyConfettiInterval) {
+    stopPartyConfetti();
+  }
+}
+
+function startPartyConfetti() {
+  let container = document.getElementById('party-confetti');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'party-confetti';
+    container.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(container);
+  }
+  const colors = ['#ff2e93', '#00f0ff', '#ffd23f', '#b967ff', '#5cff8a'];
+
+  partyConfettiInterval = setInterval(() => {
+    if (document.hidden) return;
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const duration = 3.5 + Math.random() * 2.5;
+    const drift = (Math.random() - 0.5) * 160;
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = duration + 's';
+    piece.style.setProperty('--drift', drift + 'px');
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), duration * 1000 + 100);
+  }, 220);
+}
+
+function stopPartyConfetti() {
+  clearInterval(partyConfettiInterval);
+  partyConfettiInterval = null;
+  const container = document.getElementById('party-confetti');
+  if (container) container.remove();
 }
 
 // ────────────────────────────────────────
