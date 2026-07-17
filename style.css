@@ -206,12 +206,25 @@
 .confetti-piece {
   position: absolute;
   top: -20px;
-  width: 8px; height: 14px;
+  /* Larger invisible hit box than the visible piece — much easier to
+     land a click/hover on with a trackpad while it's falling. */
+  width: 30px; height: 34px;
+  margin-left: -11px; margin-top: -10px;
   opacity: 0.9;
   animation: confetti-fall linear forwards;
+  animation-play-state: var(--fall-state, running);
   will-change: transform;
   pointer-events: auto;
   cursor: pointer;
+}
+.confetti-piece::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px; height: 14px;
+  background: var(--piece-color, #ff2e93);
+  border-radius: var(--piece-radius, 2px);
 }
 @keyframes confetti-fall {
   0%   { transform: translateY(0) translateX(0) rotate(0deg); }

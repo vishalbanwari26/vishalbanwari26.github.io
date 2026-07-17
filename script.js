@@ -219,6 +219,16 @@ function startPartyConfetti() {
       const piece = e.target.closest('.confetti-piece');
       if (piece) burstConfettiPiece(piece, container);
     });
+    // Hovering (even briefly, with a forgiving trackpad-friendly hit box)
+    // pauses the fall so there's time to actually land the click.
+    container.addEventListener('mouseover', (e) => {
+      const piece = e.target.closest('.confetti-piece');
+      if (piece) piece.style.setProperty('--fall-state', 'paused');
+    });
+    container.addEventListener('mouseout', (e) => {
+      const piece = e.target.closest('.confetti-piece');
+      if (piece && piece.isConnected) piece.style.setProperty('--fall-state', 'running');
+    });
     document.body.appendChild(container);
   }
 
@@ -229,10 +239,10 @@ function startPartyConfetti() {
     const duration = 3.5 + Math.random() * 2.5;
     const drift = (Math.random() - 0.5) * 160;
     piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    piece.style.setProperty('--piece-color', CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]);
     piece.style.animationDuration = duration + 's';
     piece.style.setProperty('--drift', drift + 'px');
-    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.setProperty('--piece-radius', Math.random() > 0.5 ? '50%' : '2px');
     container.appendChild(piece);
     setTimeout(() => piece.remove(), duration * 1000 + 100);
   }, 220);
@@ -243,7 +253,7 @@ function burstConfettiPiece(piece, container) {
   const containerRect = container.getBoundingClientRect();
   const cx = pieceRect.left - containerRect.left + pieceRect.width / 2;
   const cy = pieceRect.top - containerRect.top + pieceRect.height / 2;
-  const color = piece.style.background;
+  const color = piece.style.getPropertyValue('--piece-color');
   const count = 10;
 
   for (let i = 0; i < count; i++) {
