@@ -207,15 +207,20 @@ function syncPartyConfetti() {
   }
 }
 
+const CONFETTI_COLORS = ['#ff2e93', '#00f0ff', '#ffd23f', '#b967ff', '#5cff8a'];
+
 function startPartyConfetti() {
   let container = document.getElementById('party-confetti');
   if (!container) {
     container = document.createElement('div');
     container.id = 'party-confetti';
     container.setAttribute('aria-hidden', 'true');
+    container.addEventListener('click', (e) => {
+      const piece = e.target.closest('.confetti-piece');
+      if (piece) burstConfettiPiece(piece, container);
+    });
     document.body.appendChild(container);
   }
-  const colors = ['#ff2e93', '#00f0ff', '#ffd23f', '#b967ff', '#5cff8a'];
 
   partyConfettiInterval = setInterval(() => {
     if (document.hidden) return;
@@ -224,13 +229,37 @@ function startPartyConfetti() {
     const duration = 3.5 + Math.random() * 2.5;
     const drift = (Math.random() - 0.5) * 160;
     piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
     piece.style.animationDuration = duration + 's';
     piece.style.setProperty('--drift', drift + 'px');
     piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
     container.appendChild(piece);
     setTimeout(() => piece.remove(), duration * 1000 + 100);
   }, 220);
+}
+
+function burstConfettiPiece(piece, container) {
+  const pieceRect = piece.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const cx = pieceRect.left - containerRect.left + pieceRect.width / 2;
+  const cy = pieceRect.top - containerRect.top + pieceRect.height / 2;
+  const color = piece.style.background;
+  const count = 10;
+
+  for (let i = 0; i < count; i++) {
+    const bit = document.createElement('div');
+    bit.className = 'confetti-burst-piece';
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const dist = 30 + Math.random() * 40;
+    bit.style.left = cx + 'px';
+    bit.style.top = cy + 'px';
+    bit.style.background = color;
+    bit.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+    bit.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+    container.appendChild(bit);
+    setTimeout(() => bit.remove(), 650);
+  }
+  piece.remove();
 }
 
 function stopPartyConfetti() {
