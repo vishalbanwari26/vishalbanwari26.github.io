@@ -5,6 +5,12 @@
 // ── Featured Projects (top 6 only) ──
 const ALL_PROJECTS = [
   {
+    id: 'grid-copilot', label: 'Grid Copilot', domain: 'Agents', year: '2026',
+    description: 'Anomaly detection plus agentic root-cause analysis on industrial/grid telemetry. A streaming detector flags an anomaly, then an agent investigates it, gathering evidence from the telemetry window, from equipment and protocol documentation, and from memory of prior incidents on the same asset, to produce a root-cause report where every claim is cited. Built entirely on public data (the HAI ICS dataset), reusing Cortex for orchestration and mnemos for per-asset memory, with an eval harness that scores detection (point-adjusted F1) and root-cause quality (LLM-as-judge). A multivariate autoencoder lifts detection F1 from 0.57 to 0.95 at full recall on real ICS attacks. Includes a React dashboard over a live FastAPI + SSE backend.',
+    techs: ['Python', 'LLMs', 'PyTorch', 'FastAPI', 'React'],
+    url: 'https://github.com/vishalbanwari26/grid-copilot'
+  },
+  {
     id: 'mnemos', label: 'mnemos', domain: 'Agents', year: '2026',
     description: 'Persistent memory framework for LLM agents. Episodic and semantic memory, retrieval that adapts its own similarity/recency strategy per user, and a reflection engine that merges, decays, and forgets stale facts with a full audit trail. Three interchangeable storage backends (Postgres/pgvector, Qdrant, Neo4j) behind one interface, a FastAPI backend, a React dashboard, and a benchmark that measures recall over simulated time instead of just demoing well.',
     techs: ['Python', 'FastAPI', 'React', 'Postgres', 'Neo4j'],
