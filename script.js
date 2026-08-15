@@ -1,874 +1,650 @@
-/* ========================================
-   Portfolio Script
-   ======================================== */
+/* ==========================================================================
+   Vishal Banwari — portfolio
+   No frameworks, no animation libraries. Vanilla, and quiet by default.
+   ========================================================================== */
 
-// ── Featured Projects (top 6 only) ──
-const ALL_PROJECTS = [
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Back issues — everything that isn't a full case study above. */
+const ARCHIVE = [
   {
-    id: 'grid-copilot', label: 'Grid Copilot', domain: 'Agents', year: '2026',
-    description: 'Anomaly detection plus agentic root-cause analysis on industrial/grid telemetry. A streaming detector flags an anomaly, then an agent investigates it, gathering evidence from the telemetry window, from equipment and protocol documentation, and from memory of prior incidents on the same asset, to produce a root-cause report where every claim is cited. Built entirely on public data (the HAI ICS dataset), reusing Cortex for orchestration and mnemos for per-asset memory, with an eval harness that scores detection (point-adjusted F1) and root-cause quality (LLM-as-judge). A multivariate autoencoder lifts detection F1 from 0.57 to 0.95 at full recall on real ICS attacks. Includes a React dashboard over a live FastAPI + SSE backend.',
-    techs: ['Python', 'LLMs', 'PyTorch', 'FastAPI', 'React'],
-    url: 'https://github.com/vishalbanwari26/grid-copilot'
+    name: 'HILL Framework',
+    year: '2025',
+    desc: 'Human in the Latent Loop. Lets a person reshape latent representations during training through a distillation-inspired objective.',
+    url: 'https://www.arxiv.org/pdf/2505.06325',
   },
   {
-    id: 'mnemos', label: 'mnemos', domain: 'Agents', year: '2026',
-    description: 'Persistent memory framework for LLM agents. Episodic and semantic memory, retrieval that adapts its own similarity/recency strategy per user, and a reflection engine that merges, decays, and forgets stale facts with a full audit trail. Three interchangeable storage backends (Postgres/pgvector, Qdrant, Neo4j) behind one interface, a FastAPI backend, a React dashboard, and a benchmark that measures recall over simulated time instead of just demoing well.',
-    techs: ['Python', 'FastAPI', 'React', 'Postgres', 'Neo4j'],
-    url: 'https://github.com/vishalbanwari26/mnemos'
+    name: 'Continual Video Anomaly Detection',
+    year: '2024',
+    desc: 'Continual learning on RGB frames of ATARI gameplay. Incremental updates that detect anomalous behaviour without catastrophic forgetting.',
+    url: 'https://github.com/vishalbanwari26/CLAD',
   },
   {
-    id: 'cortex', label: 'Cortex', domain: 'Agents', year: '2025',
-    description: 'Cognitive-loop orchestrator for embodied agents. Perceives a scene with a vision-language model, decomposes a natural-language goal into a multi-step plan, dispatches steps through a modular skill registry, and adapts in real time when a step fails. Provider-agnostic: the same loop runs on Groq, Anthropic, or a deterministic mock with no code changes.',
-    techs: ['Python', 'LLMs', 'Multi-Agent', 'Vision', 'Groq'],
-    url: 'https://github.com/vishalbanwari26/cortex'
+    name: 'LLM Translation',
+    year: '2024',
+    desc: 'bloomz-3b fine-tuned for German to French translation with PEFT/LoRA, scored on BLEU and BERTScore, served through Gradio.',
+    url: 'https://github.com/vishalbanwari26/FineTuningLLMforLanguageTranslation',
   },
   {
-    id: 'hill', label: 'HILL Framework', domain: 'Research', year: '2025',
-    description: 'Human in the Latent Loop. An interactive framework that lets users incorporate human intuition into model training by reshaping latent space representations via a distillation-inspired approach.',
-    techs: ['Python', 'PyTorch', 'Human-AI', 'Visualization'],
-    url: 'https://www.arxiv.org/pdf/2505.06325'
+    name: 'RAG Bot Study',
+    year: '2024',
+    desc: 'Retrieval over academic PDFs. Upload papers, ask questions, generate MCQs, on local embeddings and Groq models.',
+    url: 'https://github.com/vishalbanwari26/RAG-BOT-STUDY',
   },
   {
-    id: 'stylized-rag', label: 'STYLIZED RAG', domain: 'LLM', year: '2024',
-    description: 'RAG pipeline designed for text style transfer, with modularity, stylistic control, and enhanced retrieval using an ensemble approach.',
-    techs: ['Python', 'RAG', 'LangChain', 'Embeddings'],
-    url: 'https://github.com/vishalbanwari26/STYLIZED_RAG'
-  },
-  {
-    id: 'clad', label: 'Continual Learning Video Anomaly Detection', domain: 'Computer Vision', year: '2024',
-    description: 'Continual learning applied to video anomaly detection on RGB frames of ATARI games. Implements incremental model updates to detect anomalous gameplay behavior without catastrophic forgetting.',
-    techs: ['Python', 'PyTorch', 'Computer Vision', 'Deep Learning'],
-    url: 'https://github.com/vishalbanwari26/CLAD'
-  },
-  {
-    id: 'finetune-llm', label: 'LLM Translation', domain: 'LLM', year: '2024',
-    description: 'Fine-tuned multilingual LLM (bloomz-3b) for German-French translation using PEFT/LoRA, evaluated with BLEU and BERTScore, and deployed via Gradio.',
-    techs: ['Python', 'Hugging Face', 'LoRA / PEFT', 'Gradio'],
-    url: 'https://github.com/vishalbanwari26/FineTuningLLMforLanguageTranslation'
-  },
-  {
-    id: 'rag-bot', label: 'RAG Bot Study', domain: 'LLM', year: '2024',
-    description: 'Streamlit app that performs RAG over academic PDFs. Upload research papers, ask questions, and generate MCQs powered by local embeddings and Groq LLMs.',
-    techs: ['Python', 'RAG', 'Streamlit', 'Embeddings'],
-    url: 'https://github.com/vishalbanwari26/RAG-BOT-STUDY'
-  },
-  {
-    id: 'meal-planner', label: 'Multi Agents LLM Meal Planner', domain: 'LLM', year: '2024',
-    description: 'Multi-agent system for daily meal planning. Uses intelligent agents to factor in dietary preferences, nutritional goals, and financial constraints.',
-    techs: ['Python', 'LangChain', 'Multi-Agent', 'Generative AI'],
-    url: 'https://github.com/vishalbanwari26/MULTI-AGENT-MEAL-PLANNER'
+    name: 'Multi-Agent Meal Planner',
+    year: '2024',
+    desc: 'Agents that negotiate a daily meal plan against dietary preferences, nutritional targets and a budget.',
+    url: 'https://github.com/vishalbanwari26/MULTI-AGENT-MEAL-PLANNER',
   },
 ];
 
-const DOMAIN_COLORS = {
-  'Agents':         '#56d4dc',
-  'LLM':            '#00d4ff',
-  'Computer Vision':'#8b5cf6',
-  'Deep Learning':  '#f59e0b',
-  'Research':       '#ec4899',
-};
+document.documentElement.classList.add('js-anim');
 
-// ────────────────────────────────────────
-// Init
-// ────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   initLoader();
-
-  gsap.set([
-    '.hero-badge', '.hero-tagline', '.hero-subtitle', '.hero-cta',
-    '.hero-scroll-hint', '.hero-stats', '.hero-divider', '.hero-marquee'
-  ], { opacity: 0 });
-
-  // Small delay so browser has painted before animations fire
-  setTimeout(() => {
-    playHeroAnimations();
-    initGlitch();
-  }, 80);
-
-  initThemeToggle();
-  initCursor();
-  initProjects();
-  initGSAP();
-  initVanillaTilt();
-  initNavBurger();
-  initHobbies();
-  initTimelineWave();
+  initTheme();
+  initArchive();
+  initReveal();
+  initNav();
+  initMask();
+  initDemos();
+  initSpin();
+  initDragline();
 });
 
-function initTimelineWave() {
-  const timeline = document.querySelector('.timeline');
-  if (!timeline) return;
+/* ── Demo panels ────────────────────────────────────────────────────────
+   Each case study opens on a screen recording. They are preload="none" and
+   only play while on screen, so the page never has three things looping at
+   once and nothing downloads until you scroll to it. */
+function initDemos() {
+  // Only the recordings; some panels are stills, which need nothing.
+  const videos = document.querySelectorAll('video.case-demo-media');
+  if (!videos.length) return;
 
-  const nodes = Array.from(timeline.querySelectorAll('.timeline-node'));
-  if (nodes.length < 2) return;
+  // Reduced motion: leave the poster frame up and never fetch the video.
+  if (REDUCED || !('IntersectionObserver' in window)) return;
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.classList.add('timeline-wave-svg');
-  svg.setAttribute('aria-hidden', 'true');
-  timeline.appendChild(svg);
+  const onScreen = new Set();
 
-  function getLayoutPos(el, ancestor) {
-    // use offsetTop/offsetLeft to avoid GSAP transform offsets
-    let top = 0, left = 0, cur = el;
-    while (cur && cur !== ancestor) {
-      top  += cur.offsetTop;
-      left += cur.offsetLeft;
-      cur   = cur.offsetParent;
-    }
-    return { x: left + el.offsetWidth / 2, y: top + el.offsetHeight / 2 };
-  }
+  // Chrome pauses muted video-only media whenever the tab is hidden, so a
+  // play() issued while backgrounded rejects. Poster frames cover that, and
+  // anything still on screen resumes when the tab comes back.
+  const start = (v) => {
+    if (v.preload === 'none') v.preload = 'auto';
+    if (document.hidden) return;
+    v.play().catch(() => {});
+  };
 
-  function buildWave() {
-    svg.innerHTML = '';
-    const W = timeline.offsetWidth;
-    const H = timeline.offsetHeight;
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('width', W);
-    svg.setAttribute('height', H);
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const v = entry.target;
+      if (entry.isIntersecting) {
+        onScreen.add(v);
+        start(v);
+      } else {
+        onScreen.delete(v);
+        if (!v.paused) v.pause();
+      }
+    });
+  }, { threshold: 0.25 });
 
-    const cx = W / 2; // centre X — all dots are here
-    const AMP = W * 0.18; // wide horizontal swing
+  videos.forEach((v) => obs.observe(v));
 
-    const pts = nodes.map(n => getLayoutPos(n, timeline));
-
-    let d = '';
-    for (let i = 0; i < pts.length - 1; i++) {
-      const a = pts[i], b = pts[i + 1];
-      // alternate swing direction so it weaves
-      const dir = i % 2 === 0 ? 1 : -1;
-      const cp1x = cx + AMP * dir;
-      const cp1y = a.y + (b.y - a.y) * 0.33;
-      const cp2x = cx - AMP * dir;
-      const cp2y = a.y + (b.y - a.y) * 0.67;
-      d += `M ${a.x} ${a.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${b.x} ${b.y} `;
-    }
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d.trim());
-    path.setAttribute('stroke', '#ff6b35');
-    path.setAttribute('stroke-width', '1.5');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke-opacity', '0.45');
-    path.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(path);
-  }
-
-  setTimeout(buildWave, 400);
-  window.addEventListener('resize', buildWave);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    onScreen.forEach(start);
+  });
 }
 
-// ────────────────────────────────────────
-// Loader
-// ────────────────────────────────────────
+/* ── Behind the mask ────────────────────────────────────────────────────
+   Hover handles it on a pointer device; this makes the reveal reachable by
+   tap and by keyboard, where :hover never fires. */
+function initMask() {
+  const frame = document.getElementById('maskFrame');
+  if (!frame) return;
+
+  frame.addEventListener('click', () => {
+    const on = frame.classList.toggle('is-revealed');
+    frame.setAttribute('aria-pressed', String(on));
+  });
+}
+
+/* ── Loader ──────────────────────────────────────────────────────────────
+   Gated on the real load event with a short floor, so it reads as a beat
+   rather than an artificial wait. */
 function initLoader() {
   const loader = document.getElementById('loader');
   if (!loader) return;
-  const MIN_VISIBLE = 2000;
+
+  const FLOOR = REDUCED ? 0 : 1100;
   const start = performance.now();
 
-  const hide = () => {
-    const elapsed = performance.now() - start;
-    const wait = Math.max(0, MIN_VISIBLE - elapsed);
+  const dismiss = () => {
+    const wait = Math.max(0, FLOOR - (performance.now() - start));
     setTimeout(() => {
-      loader.classList.add('loader-hide');
+      loader.classList.add('is-done');
       setTimeout(() => loader.remove(), 600);
     }, wait);
   };
 
-  if (document.readyState === 'complete') hide();
-  else window.addEventListener('load', hide);
+  if (document.readyState === 'complete') dismiss();
+  else window.addEventListener('load', dismiss, { once: true });
 }
 
-// ────────────────────────────────────────
-// Theme Toggle
-// ────────────────────────────────────────
-function initThemeToggle() {
+/* ── Theme ─────────────────────────────────────────────────────────────── */
+const THEMES = [
+  { id: 'night',     label: 'Night' },
+  { id: 'newsprint', label: 'Newsprint' },
+  { id: 'party',     label: 'Party' },
+];
+
+/* Module-level so the dragline agent can flip the theme itself. */
+function setTheme(id, persist = true) {
+  const theme = THEMES.find((t) => t.id === id) || THEMES[0];
+  const name = document.getElementById('themeName');
   const btn = document.getElementById('themeToggle');
-  if (!btn) return;
-  const order = ['dark', 'light', 'party'];
+
+  document.documentElement.setAttribute('data-theme', theme.id);
+  if (name) name.textContent = theme.label;
+  if (btn) btn.setAttribute('title', `Theme: ${theme.label}. Click to switch.`);
+  if (persist) localStorage.setItem('vb-theme', theme.id);
+
+  document.querySelector('meta[name="theme-color"]')?.setAttribute(
+    'content',
+    getComputedStyle(document.documentElement).getPropertyValue('--paper').trim()
+  );
+  syncConfetti();
+}
+
+function initTheme() {
+  const btn = document.getElementById('themeToggle');
+  const name = document.getElementById('themeName');
+  if (!btn || !name) return;
+
+  const apply = (id) => {
+    const theme = THEMES.find((t) => t.id === id) || THEMES[0];
+    document.documentElement.setAttribute('data-theme', theme.id);
+    name.textContent = theme.label;
+    btn.setAttribute('title', `Theme: ${theme.label}. Click to switch.`);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      'content',
+      getComputedStyle(document.documentElement).getPropertyValue('--paper').trim()
+    );
+    syncConfetti();
+  };
+
   const stored = localStorage.getItem('vb-theme');
-  if (order.includes(stored)) document.documentElement.setAttribute('data-theme', stored);
-  syncPartyConfetti();
+  apply(THEMES.some((t) => t.id === stored) ? stored : 'night');
 
   btn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme') || 'dark';
-    const next = order[(order.indexOf(current) + 1) % order.length];
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('vb-theme', next);
-    syncPartyConfetti();
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = THEMES[(THEMES.findIndex((t) => t.id === current) + 1) % THEMES.length];
+    localStorage.setItem('vb-theme', next.id);
+    apply(next.id);
   });
 }
 
-// ────────────────────────────────────────
-// Party Confetti
-// ────────────────────────────────────────
-let partyConfettiInterval = null;
+/* ── Back issues ─────────────────────────────────────────────────────────── */
+function initArchive() {
+  const list = document.getElementById('archiveList');
+  if (!list) return;
 
-function syncPartyConfetti() {
-  const isParty = document.documentElement.getAttribute('data-theme') === 'party';
-  if (isParty && !partyConfettiInterval) {
-    startPartyConfetti();
-  } else if (!isParty && partyConfettiInterval) {
-    stopPartyConfetti();
-  }
+  list.innerHTML = ARCHIVE.map((p) => `
+    <li class="archive-row">
+      <a href="${p.url}" target="_blank" rel="noopener">
+        <span class="archive-name">${p.name}</span>
+        <span class="archive-year">${p.year} &nbsp;↗</span>
+        <span class="archive-desc">${p.desc}</span>
+      </a>
+    </li>
+  `).join('');
 }
 
-const CONFETTI_COLORS = ['#ff2e93', '#00f0ff', '#ffd23f', '#b967ff', '#5cff8a'];
+/* ── Scroll reveal ───────────────────────────────────────────────────────── */
+function initReveal() {
+  const items = document.querySelectorAll('.reveal');
+  if (!items.length) return;
 
-function startPartyConfetti() {
-  let container = document.getElementById('party-confetti');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'party-confetti';
-    container.setAttribute('aria-hidden', 'true');
-    container.addEventListener('click', (e) => {
-      const piece = e.target.closest('.confetti-piece');
-      if (piece) burstConfettiPiece(piece, container);
-    });
-    // Hovering (even briefly, with a forgiving trackpad-friendly hit box)
-    // pauses the fall so there's time to actually land the click.
-    container.addEventListener('mouseover', (e) => {
-      const piece = e.target.closest('.confetti-piece');
-      if (piece) piece.style.setProperty('--fall-state', 'paused');
-    });
-    container.addEventListener('mouseout', (e) => {
-      const piece = e.target.closest('.confetti-piece');
-      if (piece && piece.isConnected) piece.style.setProperty('--fall-state', 'running');
-    });
-    document.body.appendChild(container);
+  // Fail open: no IntersectionObserver means everything is simply visible.
+  if (REDUCED || !('IntersectionObserver' in window)) {
+    items.forEach((el) => el.classList.add('is-in'));
+    return;
   }
 
-  partyConfettiInterval = setInterval(() => {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-in');
+      obs.unobserve(entry.target);
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+
+  items.forEach((el) => obs.observe(el));
+}
+
+/* ── Nav ─────────────────────────────────────────────────────────────────── */
+function initNav() {
+  const nav = document.getElementById('nav');
+  const links = document.getElementById('navLinks');
+  const burger = document.getElementById('navBurger');
+
+  if (nav) {
+    const onScroll = () => nav.classList.toggle('is-stuck', window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  if (burger && links) {
+    burger.addEventListener('click', () => {
+      const open = links.classList.toggle('is-open');
+      burger.classList.toggle('is-open', open);
+      burger.setAttribute('aria-expanded', String(open));
+    });
+    links.querySelectorAll('.nav-link').forEach((a) =>
+      a.addEventListener('click', () => {
+        links.classList.remove('is-open');
+        burger.classList.remove('is-open');
+        burger.setAttribute('aria-expanded', 'false');
+      })
+    );
+  }
+
+  // Active section
+  const navLinks = [...document.querySelectorAll('.nav-link')];
+  const sections = navLinks
+    .map((a) => document.querySelector(a.getAttribute('href')))
+    .filter(Boolean);
+  if (!sections.length || !('IntersectionObserver' in window)) return;
+
+  const seen = new Map();
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => seen.set(e.target.id, e.intersectionRatio));
+    let bestId = null, best = 0;
+    seen.forEach((ratio, id) => { if (ratio > best) { best = ratio; bestId = id; } });
+    navLinks.forEach((a) =>
+      a.classList.toggle('is-active', best > 0 && a.getAttribute('href') === `#${bestId}`)
+    );
+  }, { threshold: [0, 0.15, 0.4, 0.7] });
+
+  sections.forEach((s) => obs.observe(s));
+}
+
+/* ── Confetti — party theme only ─────────────────────────────────────────── */
+let confettiTimer = null;
+const CONFETTI = ['#ff2e93', '#00f0ff', '#ffd23f', '#b967ff', '#5cff8a', '#ff6b35'];
+
+function syncConfetti() {
+  const party = document.documentElement.getAttribute('data-theme') === 'party';
+  if (party && !confettiTimer && !REDUCED) startConfetti();
+  else if (!party && confettiTimer) stopConfetti();
+}
+
+function startConfetti() {
+  let box = document.getElementById('confetti');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'confetti';
+    box.setAttribute('aria-hidden', 'true');
+
+    // A generous hit box plus pause-on-hover, so a falling piece is actually
+    // catchable with a trackpad.
+    box.addEventListener('click', (e) => {
+      const piece = e.target.closest('.confetti-piece');
+      if (piece) burst(piece, box);
+    });
+    box.addEventListener('mouseover', (e) => {
+      const piece = e.target.closest('.confetti-piece');
+      if (piece) piece.style.setProperty('--fall', 'paused');
+    });
+    box.addEventListener('mouseout', (e) => {
+      const piece = e.target.closest('.confetti-piece');
+      if (piece && piece.isConnected) piece.style.setProperty('--fall', 'running');
+    });
+
+    document.body.appendChild(box);
+  }
+
+  confettiTimer = setInterval(() => {
     if (document.hidden) return;
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
-    const duration = 3.5 + Math.random() * 2.5;
-    const drift = (Math.random() - 0.5) * 160;
+    const dur = 3.5 + Math.random() * 2.5;
     piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.setProperty('--piece-color', CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]);
-    piece.style.animationDuration = duration + 's';
-    piece.style.setProperty('--drift', drift + 'px');
-    piece.style.setProperty('--piece-radius', Math.random() > 0.5 ? '50%' : '2px');
-    container.appendChild(piece);
-    setTimeout(() => piece.remove(), duration * 1000 + 100);
-  }, 220);
+    piece.style.animationDuration = dur + 's';
+    piece.style.setProperty('--piece', CONFETTI[(Math.random() * CONFETTI.length) | 0]);
+    piece.style.setProperty('--drift', (Math.random() - 0.5) * 160 + 'px');
+    piece.style.setProperty('--piece-r', Math.random() > 0.5 ? '50%' : '1px');
+    box.appendChild(piece);
+    setTimeout(() => piece.remove(), dur * 1000 + 120);
+  }, 240);
 }
 
-function burstConfettiPiece(piece, container) {
-  const pieceRect = piece.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
-  const cx = pieceRect.left - containerRect.left + pieceRect.width / 2;
-  const cy = pieceRect.top - containerRect.top + pieceRect.height / 2;
-  const color = piece.style.getPropertyValue('--piece-color');
-  const count = 10;
+function burst(piece, box) {
+  const p = piece.getBoundingClientRect();
+  const b = box.getBoundingClientRect();
+  const cx = p.left - b.left + p.width / 2;
+  const cy = p.top - b.top + p.height / 2;
+  const color = piece.style.getPropertyValue('--piece');
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 10; i++) {
     const bit = document.createElement('div');
-    bit.className = 'confetti-burst-piece';
-    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    bit.className = 'confetti-bit';
+    const angle = (Math.PI * 2 * i) / 10 + Math.random() * 0.5;
     const dist = 30 + Math.random() * 40;
-    bit.style.left = cx + 'px';
-    bit.style.top = cy + 'px';
-    bit.style.background = color;
+    bit.style.cssText = `left:${cx}px;top:${cy}px;background:${color}`;
     bit.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
     bit.style.setProperty('--by', Math.sin(angle) * dist + 'px');
-    container.appendChild(bit);
+    box.appendChild(bit);
     setTimeout(() => bit.remove(), 650);
   }
   piece.remove();
 }
 
-function stopPartyConfetti() {
-  clearInterval(partyConfettiInterval);
-  partyConfettiInterval = null;
-  const container = document.getElementById('party-confetti');
-  if (container) container.remove();
+function stopConfetti() {
+  clearInterval(confettiTimer);
+  confettiTimer = null;
+  document.getElementById('confetti')?.remove();
 }
 
-// ────────────────────────────────────────
-// Hero Animations
-// ────────────────────────────────────────
-function playHeroAnimations() {
-  const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
-  tl.fromTo('.hero-badge', { opacity:0, x:-24 }, { opacity:1, x:0, duration:0.6, ease:'power3.out' })
-    .fromTo('.hero-title-line:first-child', { opacity:0, y:80 }, { opacity:1, y:0, duration:0.9 }, '-=0.2')
-    .fromTo('.hero-title-accent',           { opacity:0, y:80 }, { opacity:1, y:0, duration:0.9 }, '-=0.6')
-    .to('.hero-divider',   { opacity:1, scaleX:1, duration:0.8, ease:'power3.out' }, '-=0.3')
-    .to('.hero-tagline',   { opacity:1, duration:0.6 }, '-=0.5')
-    .to('.hero-subtitle',  { opacity:1, duration:0.5 }, '-=0.4')
-    .to('.hero-stats',     { opacity:1, duration:0.5 }, '-=0.3')
-    .to('.hero-cta',       { opacity:1, duration:0.5, ease:'back.out(1.5)' }, '-=0.2')
-    .to('.hero-marquee',   { opacity:1, duration:0.8 }, '-=0.1');
-  tl.call(animateCounters, [], '-=0.5');
-}
-
-function animateCounters() {
-  document.querySelectorAll('.hero-stat-num').forEach(el => {
-    const target = parseInt(el.getAttribute('data-target') || '0', 10);
-    const suffix = el.getAttribute('data-suffix') || '';
-    let step = 0; const steps = 60;
-    const timer = setInterval(() => {
-      step++;
-      el.textContent = Math.min(Math.round(target / steps * step), target) + suffix;
-      if (step >= steps) { el.textContent = target + suffix; clearInterval(timer); }
-    }, 1200 / steps);
+/* ── Dragline agent ──────────────────────────────────────────────────────
+   A spider riding a dragline down the right margin. Three jobs in one
+   element: the thread length is scroll progress, the readout reports the
+   section it is over, and clicking it makes it run a loop. Physics only
+   tick while something is actually moving. */
+function initDragline() {
+  if (REDUCED) return;
+  const mq = window.matchMedia('(min-width: 921px)');
+  if (mq.matches) return buildDragline();
+  mq.addEventListener('change', function once(e) {
+    if (!e.matches) return;
+    mq.removeEventListener('change', once);
+    buildDragline();
   });
 }
 
-// ────────────────────────────────────────
-// Periodic Glitch on "Banwari"
-// ────────────────────────────────────────
-function initGlitch() {
-  const el = document.querySelector('.hero-title-accent');
-  if (!el) return;
-  function glitch() {
-    el.classList.add('glitching');
-    setTimeout(() => el.classList.remove('glitching'), 380);
-    setTimeout(glitch, 5000 + Math.random() * 7000);
-  }
-  setTimeout(glitch, 4500);
-}
+/* What the agent says it is looking at, in the Cortex log's own grammar. */
+const BEATS = [
+  { id: 'top',        eye: 'vishal banwari',  plan: 'ai + software engineer' },
+  { id: 'about',      eye: 'about',           plan: 'seven years, then research' },
+  { id: 'work',       eye: 'selected work',   plan: '5 issues' },
+  { id: 'research',   eye: 'research',        plan: '3 papers' },
+  { id: 'experience', eye: 'experience',      plan: '5 roles' },
+  { id: 'stack',      eye: 'toolkit',         plan: '' },
+  { id: 'contact',    eye: 'contact',         plan: 'say hello' },
+];
 
-// ────────────────────────────────────────
-// Projects — Card Grid
-// ────────────────────────────────────────
-function initProjects() {
-  const grid = document.getElementById('projectsGrid');
-  if (!grid) return;
+function buildDragline() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'dragline';
+  canvas.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
 
-  ALL_PROJECTS.forEach((p, i) => {
-    const dc      = DOMAIN_COLORS[p.domain] || '#ff6b35';
-    const isArxiv = (p.url || '').includes('arxiv');
-    const card    = document.createElement('div');
-    card.className = 'project-card';
-    card.style.setProperty('--dc', dc);
-    card.innerHTML = `
-      <div class="pc-top">
-        <span class="pc-num">${String(i + 1).padStart(2, '0')}</span>
-        <span class="pc-domain">${p.domain}</span>
-      </div>
-      <h3 class="pc-name">${p.label}</h3>
-      <p class="pc-desc">${p.description}</p>
-      <div class="pc-techs">
-        ${p.techs.slice(0, 3).map(t => `<span class="pc-tech">${t}</span>`).join('')}
-      </div>
-      <span class="pc-link">${isArxiv ? 'Read ↗' : 'GitHub ↗'}</span>
-    `;
+  const readout = document.createElement('div');
+  readout.id = 'agent-readout';
+  readout.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(readout);
 
-    card.addEventListener('click', () => { if (p.url) window.open(p.url, '_blank'); });
-    card.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-    card.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+  const SEGS = 18, GRAV = 0.42, DAMP = 0.94, ITERS = 14, SLEEP = 0.05;
+  const HEAD = 118;  // slack at scroll 0, enough to clear the nav bar
+  const TAIL = 150;  // keep it clear of the very bottom
 
-    grid.appendChild(card);
-  });
+  let W = 0, H = 0, anchorX = 0, segLen = 6;
+  let pts = [], raf = null, hovering = false;
+  let readoutTimer = null, lastBeat = null, running = false;
 
-  // Stagger cards in on scroll
-  gsap.fromTo('.project-card',
-    { opacity: 0, y: 24 },
-    {
-      opacity: 1, y: 0,
-      stagger: 0.04, duration: 0.5, ease: 'power2.out',
-      scrollTrigger: { trigger: grid, start: 'top 85%', toggleActions: 'play none none reverse' }
-    }
-  );
-}
-
-// ────────────────────────────────────────
-// Beyond Code — pop-in hobbies
-// ────────────────────────────────────────
-function initHobbies() {
-  const items = document.querySelectorAll('.hobby-item');
-  if (!items.length) return;
-  const grid = document.querySelector('.hobbies-grid');
-  if (!grid) return;
-
-  const obs = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
-      items.forEach((item, i) => setTimeout(() => {
-        item.style.transition = 'opacity .4s ease, transform .4s cubic-bezier(.34,1.56,.64,1)';
-        item.classList.add('popped');
-      }, i * 60));
-      obs.disconnect();
-    }
-  }, { threshold: 0.2 });
-  obs.observe(grid);
-}
-
-// ────────────────────────────────────────
-// Custom Cursor
-// ────────────────────────────────────────
-function initCursor() {
-  const dot     = document.getElementById('cursor-dot');
-  const outline = document.getElementById('cursor-outline');
-  if (!dot || !outline) return;
-
-  let cx = innerWidth / 2, cy = innerHeight / 2;
-  let ox = cx, oy = cy;
-
-  window.addEventListener('mousemove', e => {
-    cx = e.clientX; cy = e.clientY;
-    dot.style.left = cx + 'px'; dot.style.top = cy + 'px';
-  });
-  (function follow() {
-    ox += (cx - ox) * 0.12; oy += (cy - oy) * 0.12;
-    outline.style.left = ox + 'px'; outline.style.top = oy + 'px';
-    requestAnimationFrame(follow);
-  })();
-
-  document.querySelectorAll('a, button, .glass-card, .skill-badge, .hobby-item').forEach(el => {
-    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-  });
-
-  document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('mousemove', e => {
-      const r = btn.getBoundingClientRect();
-      const x = e.clientX - r.left - r.width / 2;
-      const y = e.clientY - r.top  - r.height / 2;
-      gsap.to(btn, { x: x * 0.3, y: y * 0.3, duration: 0.4, ease: 'power2.out' });
-    });
-    btn.addEventListener('mouseleave', () => {
-      gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1,.3)' });
-    });
-  });
-}
-
-// ────────────────────────────────────────
-// GSAP ScrollTrigger
-// ────────────────────────────────────────
-function initGSAP() {
-  gsap.registerPlugin(ScrollTrigger);
-
-  // Section headers
-  gsap.utils.toArray('.section-header').forEach(el => {
-    const label = el.querySelector('.section-label');
-    const title = el.querySelector('.section-title');
-    const desc  = el.querySelector('.section-desc');
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: el, start: 'top 85%', toggleActions: 'play none none reverse',
-        onEnter:     () => el.classList.add('in-view'),
-        onLeaveBack: () => el.classList.remove('in-view')
-      }
-    });
-    if (label) tl.fromTo(label, { opacity:0, x:-20 }, { opacity:1, x:0, duration:0.5 });
-    if (title) tl.fromTo(title, { opacity:0, y:40   }, { opacity:1, y:0, duration:0.8, ease:'power3.out' }, '-=0.2');
-    if (desc)  tl.fromTo(desc,  { opacity:0, y:20   }, { opacity:1, y:0, duration:0.5 }, '-=0.4');
-  });
-
-  // Timeline items
-  gsap.utils.toArray('.timeline-item').forEach(el => {
-    const side = el.getAttribute('data-side');
-    gsap.fromTo(el,
-      { opacity:0, x: side === 'left' ? -70 : 70 },
-      { opacity:1, x:0, duration:0.9, ease:'power3.out',
-        scrollTrigger: { trigger:el, start:'top 82%', toggleActions:'play none none reverse' }
-      }
-    );
-  });
-
-  // Skills cards
-  gsap.utils.toArray('.skills-category').forEach((el, i) => {
-    gsap.fromTo(el,
-      { opacity:0, y:50, scale:0.93 },
-      { opacity:1, y:0, scale:1, duration:0.7, delay:i*0.08, ease:'back.out(1.5)',
-        scrollTrigger: { trigger:el, start:'top 88%', toggleActions:'play none none reverse' }
-      }
-    );
-  });
-
-  // Publication cards — simple fade, no scroll dependency
-  gsap.fromTo('.pub-card',
-    { opacity:0, y:20 },
-    { opacity:1, y:0, duration:0.6, ease:'power2.out', stagger:0.1,
-      scrollTrigger: { trigger:'.pub-grid', start:'top 98%', once:true }
-    }
-  );
-
-  // Contact
-  gsap.fromTo('.contact-content',
-    { opacity:0, y:60 },
-    { opacity:1, y:0, duration:1, ease:'power3.out',
-      scrollTrigger: { trigger:'.contact-section', start:'top 80%', toggleActions:'play none none reverse' }
-    }
-  );
-
-  // Navbar
-  ScrollTrigger.create({
-    start: 'top -80',
-    onUpdate: () => {
-      const nav = document.getElementById('nav');
-      if (scrollY > 80) nav.classList.add('scrolled');
-      else nav.classList.remove('scrolled');
-    }
-  });
-}
-
-// ────────────────────────────────────────
-// VanillaTilt
-// ────────────────────────────────────────
-function initVanillaTilt() {
-  if (typeof VanillaTilt === 'undefined') return;
-  VanillaTilt.init(document.querySelectorAll('.glass-card'), {
-    max: 6, speed: 400, glare: true, 'max-glare': 0.06, perspective: 1200
-  });
-}
-
-// ────────────────────────────────────────
-// Mobile Nav
-// ────────────────────────────────────────
-function initNavBurger() {
-  const burger = document.getElementById('navBurger');
-  const links  = document.getElementById('navLinks');
-  if (!burger || !links) return;
-  burger.addEventListener('click', () => {
-    burger.classList.toggle('open');
-    links.classList.toggle('open');
-  });
-  links.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => {
-    burger.classList.remove('open'); links.classList.remove('open');
-  }));
-}
-
-// ────────────────────────────────────────
-// Text Scramble
-// ────────────────────────────────────────
-function scrambleText(el) {
-  if (!el) return;
-  const orig  = el.innerText;
-  const chars = '!<>-_\\/[]{}=+*^?#@$%&~';
-  let iter = 0;
-  const interval = setInterval(() => {
-    el.innerText = orig.split('').map((ch, idx) => {
-      if (idx < iter) return orig[idx];
-      if (ch === ' ') return ' ';
-      return chars[Math.floor(Math.random() * chars.length)];
-    }).join('');
-    if (iter >= orig.length) clearInterval(interval);
-    iter += 0.5;
-  }, 25);
-}
-
-// ── Hanging Ropes ──────────────────────────────────────────────────────────
-window.addEventListener('load', function() {
-  const canvas = document.getElementById('ropes-canvas');
-  if (!canvas) return;
-
-  const ctx    = canvas.getContext('2d');
-  const LABELS = ['Nature lover', 'AI engineer', 'Sidequesting'];
-  const COLORS = ['#00d4ff', '#ff6b35', '#8b5cf6'];
-  const SEGS   = 14;
-  const GRAV   = 0.55;
-  const DAMP   = 0.96;
-  const ITERS  = 30;
-  const SLEEP  = 0.08;
-  const CLIMB_SPD = 0.04;
-  const COLL_DIST = 20;
-
-  let W, H, segLen, anchors;
-  let dragging  = null;
-  let rafId     = null;
-  let sleeping  = false;
-  let idleTimer  = null;
-  let monkeyDrag = -1; // which rope's monkey is being dragged
-  let hovRope   = -1;
-
-  const monkeys = LABELS.map(() => ({ seg: SEGS, dir: 0, target: SEGS }));
-  const ropes   = LABELS.map(() => []);
-
-  function rgba(hex, a) {
-    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-    return `rgba(${r},${g},${b},${a})`;
-  }
-
-  // hide canvas once user has scrolled past the hero section
-  const hero = document.getElementById('hero');
-  function updateCanvasVisibility() {
-    if (!hero) return;
-    // hide as soon as the hero is more than 80% scrolled past
-    const show = window.scrollY < hero.offsetHeight * 0.8;
-    canvas.style.opacity = show ? '1' : '0';
-    canvas.style.pointerEvents = show ? 'auto' : 'none';
-  }
-  updateCanvasVisibility();
-  window.addEventListener('scroll', updateCanvasVisibility, { passive: true });
+  const token = (n) =>
+    getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
   function resize() {
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width  = W;
-    canvas.height = H;
-    canvas.style.width  = W + 'px';
-    canvas.style.height = H + 'px';
-
-    segLen = (H * 0.62) / SEGS;
-    const base = W * 0.73, gap = W * 0.09;
-    anchors = [base, base + gap, base + gap * 2];
-
-    ropes.forEach((pts, ri) => {
-      pts.length = 0;
-      const ax = anchors[ri];
-      for (let i = 0; i <= SEGS; i++)
-        pts.push({ x: ax, y: i * segLen, ox: ax, oy: i * segLen, pinned: i === 0 });
-    });
-  }
-
-  function constrain(pts, ax) {
-    for (let it = 0; it < ITERS; it++) {
-      pts[0].x = ax; pts[0].y = 0;
-      for (let i = 0; i < SEGS; i++) {
-        const a = pts[i], b = pts[i+1];
-        const dx = b.x-a.x, dy = b.y-a.y;
-        const d  = Math.sqrt(dx*dx+dy*dy) || 0.001;
-        const f  = (d - segLen) / d * 0.5;
-        if (!a.pinned) { a.x += dx*f; a.y += dy*f; }
-        if (!b.pinned) { b.x -= dx*f; b.y -= dy*f; }
-      }
-      pts[0].x = ax; pts[0].y = 0;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.offsetWidth; H = canvas.offsetHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    anchorX = W * 0.5;
+    if (!pts.length) {
+      for (let i = 0; i <= SEGS; i++) pts.push({ x: anchorX, y: i * 4, ox: anchorX, oy: i * 4 });
     }
   }
 
-  function collide() {
-    for (let ri = 0; ri < ropes.length; ri++)
-      for (let rj = ri+1; rj < ropes.length; rj++)
-        for (let pi = 1; pi <= SEGS; pi++)
-          for (let pj = 1; pj <= SEGS; pj++) {
-            const a = ropes[ri][pi], b = ropes[rj][pj];
-            const dx = b.x-a.x, dy = b.y-a.y;
-            const d  = Math.sqrt(dx*dx+dy*dy) || 0.001;
-            if (d < COLL_DIST) {
-              const push = (COLL_DIST - d) / 2 / d;
-              a.x -= dx*push; a.y -= dy*push;
-              b.x += dx*push; b.y += dy*push;
-            }
-          }
+  const progress = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    return max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
+  };
+
+  function step() {
+    // Dragline length is reading progress; the chain relaxes toward it.
+    segLen = (HEAD + progress() * (H - TAIL - HEAD)) / SEGS;
+
+    for (let i = 1; i <= SEGS; i++) {
+      const p = pts[i];
+      const vx = (p.x - p.ox) * DAMP, vy = (p.y - p.oy) * DAMP;
+      p.ox = p.x; p.oy = p.y;
+      p.x += vx; p.y += vy + GRAV;
+    }
+    for (let it = 0; it < ITERS; it++) {
+      pts[0].x = anchorX; pts[0].y = 0;
+      for (let i = 0; i < SEGS; i++) {
+        const a = pts[i], b = pts[i + 1];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        const f = ((d - segLen) / d) * 0.5;
+        if (i !== 0) { a.x += dx * f; a.y += dy * f; }
+        b.x -= dx * f; b.y -= dy * f;
+      }
+    }
   }
 
-  function energy() {
-    let e = 0;
-    ropes.forEach(pts => pts.forEach(p => { if (!p.pinned) e += Math.abs(p.x-p.ox)+Math.abs(p.y-p.oy); }));
-    return e;
-  }
-
-  function monkeyPos(ri) {
-    const m  = monkeys[ri];
-    const si = Math.min(Math.floor(m.seg), SEGS-1);
-    const t  = m.seg - si;
-    const pa = ropes[ri][si], pb = ropes[ri][Math.min(si+1, SEGS)];
-    return { x: pa.x + (pb.x-pa.x)*t, y: pa.y + (pb.y-pa.y)*t };
-  }
-
-  function tick() {
-    ropes.forEach(pts => pts.forEach(p => {
-      if (p.pinned) return;
-      const vx = (p.x-p.ox)*DAMP, vy = (p.y-p.oy)*DAMP;
-      p.ox=p.x; p.oy=p.y; p.x+=vx; p.y+=vy+GRAV;
-    }));
-    ropes.forEach((pts,ri) => constrain(pts, anchors[ri]));
-    collide();
-
-    // monkey slides back to bottom when released
-    monkeys.forEach((m, ri) => {
-      if (ri === monkeyDrag || m.dir === 0) return;
-      const spd = CLIMB_SPD * 0.7;
-      m.seg += m.dir * spd;
-      if (m.seg >= m.target) { m.seg = m.target; m.dir = 0; }
-    });
-  }
-
-  function drawMonkey(mx, my, col) {
-    const c1 = rgba(col, 0.88), c2 = rgba(col, 0.32), c3 = rgba(col, 0.55);
-    // arms gripping rope
-    ctx.strokeStyle = c1; ctx.lineWidth = 2; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(mx-6, my-6); ctx.lineTo(mx, my-13); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(mx+6, my-6); ctx.lineTo(mx, my-13); ctx.stroke();
-    // body
-    ctx.beginPath(); ctx.ellipse(mx, my+10, 9, 11, 0, 0, Math.PI*2);
-    ctx.fillStyle = c1; ctx.fill();
-    // belly
-    ctx.beginPath(); ctx.ellipse(mx, my+12, 5, 7, 0, 0, Math.PI*2);
-    ctx.fillStyle = c2; ctx.fill();
-    // legs
-    ctx.strokeStyle = c1; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(mx-5, my+20); ctx.lineTo(mx-8, my+28); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(mx+5, my+20); ctx.lineTo(mx+8, my+28); ctx.stroke();
-    // feet
-    [-8,8].forEach(fx => {
-      ctx.beginPath(); ctx.ellipse(mx+fx, my+29, 4, 2.5, fx<0?-0.3:0.3, 0, Math.PI*2);
-      ctx.fillStyle = c1; ctx.fill();
-    });
-    // head
-    ctx.beginPath(); ctx.arc(mx, my-4, 13, 0, Math.PI*2);
-    ctx.fillStyle = c1; ctx.fill();
-    // ears
-    [-13,13].forEach(ex => {
-      ctx.beginPath(); ctx.arc(mx+ex, my-8, 5, 0, Math.PI*2); ctx.fillStyle = c1; ctx.fill();
-      ctx.beginPath(); ctx.arc(mx+ex, my-8, 2.5, 0, Math.PI*2); ctx.fillStyle = c3; ctx.fill();
-    });
-    // muzzle
-    ctx.beginPath(); ctx.ellipse(mx, my+2, 7.5, 6, 0, 0, Math.PI*2);
-    ctx.fillStyle = c2; ctx.fill();
-    // eyes
-    [-4.5,4.5].forEach(ex => {
-      ctx.beginPath(); ctx.arc(mx+ex, my-7, 3, 0, Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
-      ctx.beginPath(); ctx.arc(mx+ex+0.5, my-6.5, 1.5, 0, Math.PI*2); ctx.fillStyle='#111'; ctx.fill();
-    });
-    // nostrils
-    [-2,2].forEach(nx => { ctx.beginPath(); ctx.arc(mx+nx, my+1, 1, 0, Math.PI*2); ctx.fillStyle=rgba(col,0.6); ctx.fill(); });
-    // smile
-    ctx.beginPath(); ctx.arc(mx, my+3, 4, 0.15, Math.PI-0.15);
-    ctx.strokeStyle = rgba(col,0.8); ctx.lineWidth=1.5; ctx.stroke();
+  function spider(x, y, a) {
+    const c = hovering ? token('--red-ink') : token('--red');
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(a);
+    ctx.strokeStyle = c; ctx.fillStyle = c;
+    ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+    [[-4,-2,-14,-10],[-4,0,-16,-1],[-4,2,-14,7],[-4,4,-11,12],
+     [ 4,-2, 14,-10],[ 4,0, 16,-1],[ 4,2, 14,7],[ 4,4, 11,12]]
+      .forEach(([x1,y1,x2,y2]) => {
+        ctx.beginPath(); ctx.moveTo(x1,y1);
+        ctx.quadraticCurveTo((x1+x2)/2, y1-6, x2, y2); ctx.stroke();
+      });
+    ctx.beginPath(); ctx.ellipse(0, 5, 5.5, 7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -4, 4, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
   }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    ropes.forEach((pts, ri) => {
-      const col  = COLORS[ri];
-      const hovd = hovRope === ri;
-      // rope
-      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < SEGS-1; i++) {
-        const mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2;
-        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
-      }
-      ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
-      ctx.strokeStyle = rgba(col, hovd ? 0.95 : 0.7);
-      ctx.lineWidth = hovd ? 2.5 : 1.5; ctx.lineCap='round'; ctx.stroke();
-      // pin dot
-      ctx.beginPath(); ctx.arc(pts[0].x, 3, 3.5, 0, Math.PI*2);
-      ctx.fillStyle = col; ctx.fill();
-      // monkey
-      const { x:mx, y:my } = monkeyPos(ri);
-      drawMonkey(mx, my, col);
-    });
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < SEGS; i++) {
+      const mx = (pts[i].x + pts[i+1].x)/2, my = (pts[i].y + pts[i+1].y)/2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    ctx.lineTo(pts[SEGS].x, pts[SEGS].y);
+    ctx.strokeStyle = hovering ? token('--red') : token('--ink-3');
+    ctx.lineWidth = 1; ctx.stroke();
+
+    const tip = pts[SEGS], prev = pts[SEGS-1];
+    spider(tip.x, tip.y, -Math.atan2(tip.x - prev.x, prev.y - tip.y));
+
+    readout.style.top = Math.round(tip.y - 16) + 'px';
+    if (!running) positionLog(tip.y);
   }
 
-  function isActive() {
-    if (energy() >= SLEEP) return true;
-    return monkeys.some(m => m.dir !== 0); // sliding back to bottom
+  function energy() {
+    let e = 0;
+    for (let i = 1; i <= SEGS; i++) e += Math.abs(pts[i].x-pts[i].ox) + Math.abs(pts[i].y-pts[i].oy);
+    return e;
   }
-
   function loop() {
-    tick(); draw();
-    if (!dragging && monkeyDrag < 0 && !isActive()) {
-      sleeping = true; rafId = null; return;
+    step(); draw();
+    if (energy() < SLEEP) { raf = null; return; }
+    raf = requestAnimationFrame(loop);
+  }
+  const wake = () => { if (!raf) raf = requestAnimationFrame(loop); };
+
+  /* ── Readout ── */
+  function currentBeat() {
+    const mid = scrollY + innerHeight * 0.45;
+    let found = BEATS[0];
+    BEATS.forEach((b) => {
+      const el = document.getElementById(b.id);
+      if (el && el.offsetTop <= mid) found = b;
+    });
+    return found;
+  }
+
+  function updateReadout() {
+    const b = currentBeat();
+    if (b.id !== lastBeat) {
+      lastBeat = b.id;
+      readout.innerHTML =
+        `<div><span class="tag tag-eye">[eye]</span> ${b.eye}</div>` +
+        (b.plan ? `<div><span class="tag">[plan]</span> ${b.plan}</div>` : '');
     }
-    rafId = requestAnimationFrame(loop);
+    readout.classList.add('is-awake');
+    clearTimeout(readoutTimer);
+    readoutTimer = setTimeout(() => readout.classList.remove('is-awake'), 1700);
   }
 
-  function wake() {
-    if (sleeping) { sleeping=false; rafId=requestAnimationFrame(loop); }
-    else if (!rafId) { rafId=requestAnimationFrame(loop); }
+  /* ── The loop it runs when clicked ── */
+  const log = document.createElement('div');
+  log.id = 'agent-log';
+  log.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(log);
+
+  function positionLog(tipY) {
+    const h = log.offsetHeight || 160;
+    log.style.top = Math.round(Math.min(Math.max(tipY - h / 2, 16), innerHeight - h - 16)) + 'px';
   }
 
-  function clientPos(e) {
+  function runAgent() {
+    if (running) return;
+    running = true;
+
+    const party = document.documentElement.getAttribute('data-theme') === 'party';
+    const script = party
+      ? [['[..]','Observing the scene...'], ['[eye]','Confetti already falling.'],
+         ['[!]','Nothing to do here.'], ['[ok]','Standing down.']]
+      : [['[..]','Observing the scene...'],
+         ['[eye]','A portfolio. 5 issues, 3 papers.'],
+         ['[..]','Planning to: liven this up.'],
+         ['[plan]','1. locate toggle | 2. pull'],
+         ['[>>]','[pull] pull -> party'],
+         ['[ok]','Confetti deployed.']];
+
+    log.innerHTML = '';
+    positionLog(pts[SEGS].y);
+    log.classList.add('is-open');
+
+    script.forEach(([tag, text], i) => {
+      setTimeout(() => {
+        const cls = tag === '[eye]' ? 'tag-eye'
+                  : tag === '[ok]'  ? 'tag-ok'
+                  : tag === '[>>]'  ? 'tag-run' : 'tag';
+        const p = document.createElement('p');
+        p.innerHTML = `<span class="${cls}">${tag}</span> ${text}`;
+        log.appendChild(p);
+        positionLog(pts[SEGS].y);
+      }, i * 480);
+    });
+
+    const total = script.length * 480;
+    if (!party) {
+      setTimeout(() => setTheme('party'), total - 200);
+    }
+    setTimeout(() => {
+      log.classList.remove('is-open');
+      running = false;
+    }, total + 2200);
+  }
+
+  /* ── Pointer ──
+     The spider is click-only. The canvas stays pointer-events:none until the
+     cursor is actually on it, so it never eats a click meant for the page. */
+  const local = (e) => {
     const r = canvas.getBoundingClientRect();
-    return { cx:(e.touches?e.touches[0].clientX:e.clientX)-r.left,
-             cy:(e.touches?e.touches[0].clientY:e.clientY)-r.top };
-  }
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  const nearSpider = (p) => Math.hypot(pts[SEGS].x - p.x, pts[SEGS].y - p.y) < 26;
 
-  function nearestSeg(ri, cx, cy) {
-    let best = Infinity, bestPi = SEGS;
-    ropes[ri].forEach((p, pi) => {
-      if (pi === 0) return;
-      const d = Math.hypot(p.x - cx, p.y - cy);
-      if (d < best) { best = d; bestPi = pi; }
-    });
-    return bestPi;
-  }
+  window.addEventListener('pointermove', (e) => {
+    const near = nearSpider(local(e));
+    if (near === hovering) return;
+    hovering = near;
+    canvas.style.pointerEvents = near ? 'auto' : 'none';
+    canvas.style.cursor = near ? 'pointer' : '';
+    wake();
+  }, { passive: true });
 
-  function tryGrabMonkey(cx, cy) {
-    for (let ri = 0; ri < ropes.length; ri++) {
-      const { x, y } = monkeyPos(ri);
-      if (Math.hypot(cx - x, cy - y) < 32) {
-        monkeyDrag = ri;
-        monkeys[ri].dir = 0;
-        wake(); return true;
-      }
-    }
-    return false;
-  }
-
-  canvas.addEventListener('mousedown', e => {
-    const { cx, cy } = clientPos(e);
-    if (tryGrabMonkey(cx, cy)) { e.preventDefault(); return; }
-    let best=50, found=null;
-    ropes.forEach((pts,ri) => pts.forEach((p,pi) => {
-      if (pi===0) return;
-      const d=Math.hypot(p.x-cx, p.y-cy);
-      if (d<best) { best=d; found={ri,pi}; }
-    }));
-    if (found) { dragging=found; wake(); e.preventDefault(); }
-  }, { passive:false });
-
-  canvas.addEventListener('touchstart', e => {
-    const { cx, cy } = clientPos(e);
-    if (tryGrabMonkey(cx, cy)) { e.preventDefault(); return; }
-    let best=60, found=null;
-    ropes.forEach((pts,ri) => pts.forEach((p,pi) => {
-      if (pi===0) return;
-      const d=Math.hypot(p.x-cx, p.y-cy);
-      if (d<best) { best=d; found={ri,pi}; }
-    }));
-    if (found) { dragging=found; wake(); e.preventDefault(); }
-  }, { passive:false });
-
-  canvas.addEventListener('mousemove', e => {
-    const { cx, cy } = clientPos(e);
-    if (monkeyDrag >= 0) {
-      monkeys[monkeyDrag].seg = nearestSeg(monkeyDrag, cx, cy);
-      wake(); return;
-    }
-    if (dragging) {
-      const p=ropes[dragging.ri][dragging.pi];
-      p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
-      return;
-    }
-    let h=-1, onMonkey=false;
-    ropes.forEach((pts,ri) => {
-      const { x, y } = monkeyPos(ri);
-      if (Math.hypot(cx-x, cy-y) < 32) { h=ri; onMonkey=true; return; }
-      for (let pi=1; pi<=SEGS; pi++)
-        if (Math.hypot(pts[pi].x-cx, pts[pi].y-cy)<18) { h=ri; break; }
-    });
-    if (h!==hovRope) {
-      hovRope=h;
-      canvas.style.cursor = onMonkey ? 'grab' : h>=0 ? 'crosshair' : 'default';
-      wake();
-    }
+  canvas.addEventListener('click', (e) => {
+    if (nearSpider(local(e))) runAgent();
   });
 
-  window.addEventListener('mousemove', e => {
-    const { cx, cy } = clientPos(e);
-    if (monkeyDrag >= 0) { monkeys[monkeyDrag].seg = nearestSeg(monkeyDrag, cx, cy); wake(); return; }
-    if (!dragging) return;
-    const p=ropes[dragging.ri][dragging.pi];
-    p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
-  });
-
-  window.addEventListener('touchmove', e => {
-    const { cx, cy } = clientPos(e);
-    if (monkeyDrag >= 0) { monkeys[monkeyDrag].seg = nearestSeg(monkeyDrag, cx, cy); wake(); e.preventDefault(); return; }
-    if (!dragging) return;
-    const p=ropes[dragging.ri][dragging.pi];
-    p.ox=p.x; p.oy=p.y; p.x=cx; p.y=cy;
-    e.preventDefault();
-  }, { passive:false });
-
-  function onRelease() {
-    dragging = null;
-    if (monkeyDrag >= 0) {
-      // slide back to bottom
-      monkeys[monkeyDrag].target = SEGS;
-      monkeys[monkeyDrag].dir = 1;
-      monkeyDrag = -1;
-      wake();
-    }
-  }
-  window.addEventListener('mouseup',  onRelease);
-  window.addEventListener('touchend', onRelease);
+  window.addEventListener('scroll', () => { updateReadout(); wake(); }, { passive: true });
+  window.addEventListener('resize', () => { resize(); wake(); });
 
   resize();
-  window.addEventListener('resize', () => { resize(); wake(); });
-  draw();
-});
+  updateReadout();
+  setTimeout(() => readout.classList.remove('is-awake'), 2600);
+  wake();
+}
+
+/* ── Section rules spin in ─────────────────────────────────────────────
+   The rule is a thread ending in a web fan: five spokes radiating from the
+   right-hand anchor, with two sagging cross-threads. Anchor is (44,20). */
+const RULE_WEB = `
+<svg class="sec-rule-web" viewBox="0 0 44 40" fill="none" stroke="currentColor"
+     stroke-width="0.9" stroke-linecap="round" aria-hidden="true">
+  <path d="M44 20 L10 20"/>
+  <path d="M44 20 L12 8.4"/>
+  <path d="M44 20 L12 31.6"/>
+  <path d="M44 20 L17.2 0.9"/>
+  <path d="M44 20 L17.2 39.1"/>
+  <path d="M33 11.4 Q27.9 20 33 28.6"/>
+  <path d="M23.5 4 Q14.1 20 23.5 36"/>
+</svg>`;
+
+/* Contact closes on the same mark, mirrored about the centre. Anchors at
+   (0,20) and (260,20), fans facing inward, one thread between them. */
+const CONTACT_WEB = `
+<svg viewBox="0 0 260 40" fill="none" stroke="currentColor"
+     stroke-width="0.9" stroke-linecap="round" aria-hidden="true">
+  <path d="M34 20 L226 20"/>
+  <path d="M0 20 L34 20"/><path d="M0 20 L32 8.4"/><path d="M0 20 L32 31.6"/>
+  <path d="M0 20 L26.8 0.9"/><path d="M0 20 L26.8 39.1"/>
+  <path d="M11 11.4 Q16.1 20 11 28.6"/>
+  <path d="M20.5 4 Q29.9 20 20.5 36"/>
+  <path d="M260 20 L226 20"/><path d="M260 20 L228 8.4"/><path d="M260 20 L228 31.6"/>
+  <path d="M260 20 L233.2 0.9"/><path d="M260 20 L233.2 39.1"/>
+  <path d="M249 11.4 Q243.9 20 249 28.6"/>
+  <path d="M239.5 4 Q230.1 20 239.5 36"/>
+</svg>`;
+
+function initSpin() {
+  const heads = [
+    ...document.querySelectorAll('.sec-head'),
+    ...document.querySelectorAll('.contact-rule'),
+  ];
+  if (!heads.length) return;
+
+  document.querySelectorAll('.sec-rule').forEach((rule) => {
+    rule.innerHTML = '<span class="sec-rule-line"></span>' + RULE_WEB;
+  });
+  document.querySelectorAll('.contact-rule').forEach((el) => {
+    el.innerHTML = CONTACT_WEB;
+  });
+  if (REDUCED || !('IntersectionObserver' in window)) {
+    heads.forEach((h) => h.classList.add('is-spun'));
+    return;
+  }
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('is-spun');
+      obs.unobserve(e.target);
+    });
+  }, { threshold: 0.4 });
+  heads.forEach((h) => obs.observe(h));
+}
