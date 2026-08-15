@@ -404,7 +404,12 @@ function buildDragline() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     anchorX = W * 0.5;
     if (!pts.length) {
-      for (let i = 0; i <= SEGS; i++) pts.push({ x: anchorX, y: i * 4, ox: anchorX, oy: i * 4 });
+      // Start at the rest length, not compressed. A heavily compressed start
+      // has to expand a long way, and that is when the strand folds.
+      const seg = targetLen() / SEGS;
+      for (let i = 0; i <= SEGS; i++) {
+        pts.push({ x: anchorX, y: i * seg, ox: anchorX, oy: i * seg });
+      }
     }
   }
 
@@ -413,9 +418,11 @@ function buildDragline() {
     return max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
   };
 
+  const targetLen = () => HEAD + progress() * (H - TAIL - HEAD);
+
   function step() {
     // Dragline length is reading progress; the chain relaxes toward it.
-    segLen = (HEAD + progress() * (H - TAIL - HEAD)) / SEGS;
+    segLen = targetLen() / SEGS;
 
     for (let i = 1; i <= SEGS; i++) {
       const p = pts[i];
@@ -432,6 +439,12 @@ function buildDragline() {
         const f = ((d - segLen) / d) * 0.5;
         if (i !== 0) { a.x += dx * f; a.y += dy * f; }
         b.x -= dx * f; b.y -= dy * f;
+      }
+      // Distance constraints alone let a vertical, collinear strand fold back
+      // on itself: every segment the right length, the whole thing coiled at
+      // the top. Keeping y monotonic downward forces it to actually hang.
+      for (let i = 1; i <= SEGS; i++) {
+        if (pts[i].y < pts[i - 1].y) pts[i].y = pts[i - 1].y;
       }
     }
   }
