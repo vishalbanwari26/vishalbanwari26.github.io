@@ -715,6 +715,26 @@ a.case-demo-frame:hover { border-color: var(--red); }
   border-bottom: 1px solid var(--rule);
 }
 
+/* The lesson pulled out of the project's own notes, where one exists. */
+.lesson {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+.lesson h4 {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 0.55rem;
+}
+.lesson p {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
 .case-meta { display: grid; gap: 0.7rem; }
 .case-meta > div { display: grid; gap: 0.15rem; }
 .case-meta dt {

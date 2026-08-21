@@ -14,6 +14,12 @@ const ARCHIVE = [
     url: 'https://www.arxiv.org/pdf/2505.06325',
   },
   {
+    name: 'Tasteful RAG',
+    year: '2024',
+    desc: 'Retrieval-augmented generation built for style transfer. An ensemble retriever pairs Chroma dense vectors with BM25, and style lives at the prompt layer rather than in the weights.',
+    url: 'https://github.com/vishalbanwari26/STYLIZED_RAG',
+  },
+  {
     name: 'Continual Video Anomaly Detection',
     year: '2024',
     desc: 'Continual learning on RGB frames of ATARI gameplay. Incremental updates that detect anomalous behaviour without catastrophic forgetting.',
@@ -393,6 +399,8 @@ function buildDragline() {
   let W = 0, H = 0, anchorX = 0, segLen = 6;
   let pts = [], raf = null, hovering = false;
   let readoutTimer = null, lastBeat = null, running = false;
+  // Theme to fall back to when the spider is clicked a second time.
+  let restoreTheme = 'night';
 
   const token = (n) =>
     getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -536,10 +544,20 @@ function buildDragline() {
     if (running) return;
     running = true;
 
+    // Clicking the spider toggles: on turns party up, off puts it back to
+    // whatever was running before, so the same gesture undoes itself.
     const party = document.documentElement.getAttribute('data-theme') === 'party';
+    const back = THEMES.some((t) => t.id === restoreTheme && t.id !== 'party')
+      ? restoreTheme
+      : 'night';
+
     const script = party
-      ? [['[..]','Observing the scene...'], ['[eye]','Confetti already falling.'],
-         ['[!]','Nothing to do here.'], ['[ok]','Standing down.']]
+      ? [['[..]','Observing the scene...'],
+         ['[eye]','Confetti. A lot of it.'],
+         ['[..]','Planning to: restore order.'],
+         ['[plan]','1. locate toggle | 2. release'],
+         ['[>>]',`[release] release -> ${back}`],
+         ['[ok]','Order restored.']]
       : [['[..]','Observing the scene...'],
          ['[eye]','A portfolio. 5 issues, 3 papers.'],
          ['[..]','Planning to: liven this up.'],
@@ -564,9 +582,14 @@ function buildDragline() {
     });
 
     const total = script.length * 480;
-    if (!party) {
-      setTimeout(() => setTheme('party'), total - 200);
-    }
+    setTimeout(() => {
+      if (party) {
+        setTheme(back);
+      } else {
+        restoreTheme = document.documentElement.getAttribute('data-theme') || 'night';
+        setTheme('party');
+      }
+    }, total - 200);
     setTimeout(() => {
       log.classList.remove('is-open');
       running = false;

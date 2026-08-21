@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=36" />
+  <link rel="stylesheet" href="style.css?v=41" />
 </head>
 <body>
 
@@ -237,19 +237,34 @@
             <div class="case-block">
               <h4>Result</h4>
               <p>
-                A multivariate autoencoder lifts detection F1 from 0.57 to 0.95 at
-                full recall on real ICS attacks. The eval harness scores both
-                halves separately: detection by point-adjusted F1, root-cause
-                quality by LLM-as-judge. A React dashboard runs over a live
-                FastAPI and SSE backend.
+                A multivariate autoencoder, trained on HAI's dedicated
+                attack-free file rather than a prefix of the test file, takes
+                point-adjusted F1 from 0.57 to 0.70 at full recall. The harness
+                also reports the stricter per-timestep score, where the same
+                change matters more (0.26 to 0.58), and the precision-recall
+                curve behind that single operating point, because which point is
+                right is a product decision about how many false alarms a
+                maintenance lead will tolerate per caught attack. Recall holds at
+                87% across all 118 labelled attack intervals in HAI's five test
+                files, not just the friendlier one.
               </p>
             </div>
           </div>
 
           <aside class="case-side">
             <div class="metric">
-              <span class="metric-val">0.95</span>
-              <span class="metric-cap">Detection F1 at full recall<br /><span>up from 0.57</span></span>
+              <span class="metric-val">0.70</span>
+              <span class="metric-cap">Point-adjusted F1, full recall<br /><span>from 0.57 · strict per-timestep 0.58</span></span>
+            </div>
+            <div class="lesson">
+              <h4>What it taught me</h4>
+              <p>
+                Keyword grading lies. It passed all three faults, including the
+                one that named the affected signal instead of the mechanism; only
+                a judge reading stated cause against true cause caught it. And a
+                model grading its own output trends lenient, so the judge runs on
+                a different model than the agent.
+              </p>
             </div>
             <dl class="case-meta">
               <div><dt>Year</dt><dd>2026</dd></div>
@@ -317,6 +332,16 @@
             <div class="metric">
               <span class="metric-val">85.2<span style="font-size:.5em">%</span></span>
               <span class="metric-cap">TF-IDF + logistic regression<br /><span>few-shot LLM: 81.5%</span></span>
+            </div>
+            <div class="lesson">
+              <h4>What it taught me</h4>
+              <p>
+                Few-shot accuracy turns on exemplar coverage, not exemplar count.
+                The same six examples, redistributed across document types, moved
+                accuracy from 70.4% to 81.5%. And a cheap model that handles
+                schema-constrained extraction fine was unreliable at comparative
+                reasoning under distractor pressure.
+              </p>
             </div>
             <dl class="case-meta">
               <div><dt>Year</dt><dd>2026</dd></div>
@@ -402,6 +427,84 @@
       <article class="case reveal">
         <header class="case-head">
           <span class="case-no">Issue No. 04</span>
+          <h3 class="case-title">memlens</h3>
+          <p class="case-hook">
+            Every memory tool tells you what it retrieved. None of them tell you
+            what it threw away.
+          </p>
+        </header>
+
+        <figure class="case-demo">
+          <div class="case-demo-frame">
+            <video class="case-demo-media" width="1200" height="560"
+                   muted loop playsinline preload="none"
+                   poster="media/memlens-poster.jpg"
+                   aria-label="Screen recording of memlens tracing a mem0-backed query, showing two included memories with their semantic, BM25 and entity-boost scores and two excluded memories that fell below the similarity threshold">
+              <source src="media/memlens-demo.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <figcaption>
+            <b>Live demo</b>
+            <span>A mem0-backed trace. The two excluded memories, below the 0.1 similarity threshold, are exactly the candidates mem0's own search() would have returned nothing about.</span>
+          </figcaption>
+        </figure>
+
+        <div class="case-body">
+          <div class="case-blocks">
+            <div class="case-block">
+              <h4>Problem</h4>
+              <p>
+                Ask any memory system for relevant memories and you get a list
+                and nothing else. No scores, no record of what was considered and
+                dropped, and so no way to tell a silent miss, where the memory
+                existed but scored too low, from a memory that was never stored.
+                Debugging a memory-driven bug is guesswork.
+              </p>
+            </div>
+            <div class="case-block">
+              <h4>Approach</h4>
+              <p>
+                memlens retrieves nothing itself. It wraps a backend's own
+                retrieval call and reports the scores that backend actually
+                computed, so the numbers are real rather than re-estimated. An
+                adapter is any object with a name and an async
+                <em>trace()</em> method, no inheritance required. The awkward case
+                was mem0, whose public <em>search()</em> only returns candidates
+                that already cleared its threshold: the adapter calls its internal
+                vector-store search and reapplies the threshold itself to recover
+                the ones thrown away.
+              </p>
+            </div>
+            <div class="case-block">
+              <h4>Result</h4>
+              <p>
+                Three backends behind one interface: mnemos, mem0, and raw
+                Postgres with pgvector, which is not a memory framework at all and
+                is ranked by pgvector's own cosine-distance operator. A terminal
+                viewer renders any saved trace, so a capture can be read without
+                writing code against it.
+              </p>
+            </div>
+          </div>
+
+          <aside class="case-side">
+            <blockquote class="pull">
+              The scores are the backend's own, not re-estimated.
+            </blockquote>
+            <dl class="case-meta">
+              <div><dt>Year</dt><dd>2026</dd></div>
+              <div><dt>Domain</dt><dd>Agent tooling</dd></div>
+              <div><dt>Stack</dt><dd>Python · mem0 · pgvector · Postgres</dd></div>
+            </dl>
+            <a class="case-link" href="https://github.com/vishalbanwari26/memlens" target="_blank" rel="noopener">Source<span aria-hidden="true">↗</span></a>
+          </aside>
+        </div>
+      </article>
+
+      <!-- ── Case 05 ── -->
+      <article class="case reveal">
+        <header class="case-head">
+          <span class="case-no">Issue No. 05</span>
           <h3 class="case-title">Cortex</h3>
           <p class="case-hook">
             A cognitive loop for embodied agents that keeps going when a step
@@ -486,61 +589,6 @@
         </div>
       </article>
 
-      <!-- ── Case 05 ── -->
-      <article class="case reveal">
-        <header class="case-head">
-          <span class="case-no">Issue No. 05</span>
-          <h3 class="case-title">Tasteful RAG</h3>
-          <p class="case-hook">
-            Retrieval gets you the right facts. It does not get you the right
-            voice.
-          </p>
-        </header>
-
-        <div class="case-body">
-          <div class="case-blocks">
-            <div class="case-block">
-              <h4>Problem</h4>
-              <p>
-                A retrieval pipeline will hand you accurate context and then answer
-                in whatever register the base model defaults to. Style gets treated
-                as an afterthought, when for a lot of writing tasks it is the task.
-              </p>
-            </div>
-            <div class="case-block">
-              <h4>Approach</h4>
-              <p>
-                An ensemble retriever runs Chroma dense vectors alongside BM25
-                keyword matching, so semantic and literal matches both survive into
-                the context window. Source documents are scraped and cleaned from
-                the live web with BeautifulSoup, then assembled through a structured
-                prompt template and passed to Mistral-7B-Instruct with the target
-                style.
-              </p>
-            </div>
-            <div class="case-block">
-              <h4>Result</h4>
-              <p>
-                Retrieval strategy, prompt structure and style are each swappable on
-                their own. Style lives at the prompt layer rather than in the
-                weights, so a new voice costs a template instead of a training run.
-              </p>
-            </div>
-          </div>
-
-          <aside class="case-side">
-            <blockquote class="pull">
-              A new voice costs a template, not a training run.
-            </blockquote>
-            <dl class="case-meta">
-              <div><dt>Year</dt><dd>2024</dd></div>
-              <div><dt>Domain</dt><dd>LLM · Retrieval</dd></div>
-              <div><dt>Stack</dt><dd>Python · LangChain · Chroma · BM25 · Mistral-7B</dd></div>
-            </dl>
-            <a class="case-link" href="https://github.com/vishalbanwari26/STYLIZED_RAG" target="_blank" rel="noopener">Source<span aria-hidden="true">↗</span></a>
-          </aside>
-        </div>
-      </article>
 
       <!-- ── Index of the rest ── -->
       <div class="archive reveal">
@@ -730,6 +778,7 @@
       <div class="contact-links">
         <a href="https://github.com/vishalbanwari26" target="_blank" rel="noopener">GitHub</a>
         <a href="https://www.linkedin.com/in/vishal-banwari-14b90910b/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://scholar.google.com/citations?user=D1CULb4AAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a>
         <a href="https://arxiv.org/a/banwari_v_1" target="_blank" rel="noopener">arXiv</a>
       </div>
     </div>
@@ -740,6 +789,12 @@
     <p>Set in Archivo Black &amp; Newsreader &middot; © 2026</p>
   </footer>
 
-  <script src="script.js?v=36"></script>
+  <script src="script.js?v=41"></script>
+
+  <!-- Cloudflare Web Analytics: cookieless, stores no personal data, so no
+       consent banner is required under GDPR/ePrivacy. Only reports from the
+       deployed site; localhost sends nothing. -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "3ef1f86f43b942a7b861b20a61d45987"}'></script>
 </body>
 </html>
