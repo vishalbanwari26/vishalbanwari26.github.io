@@ -319,8 +319,11 @@ em { font-style: italic; }
   position: absolute;
   top: -8%; right: -4%;
   width: min(58vw, 720px); height: min(74vh, 760px);
-  color: var(--rule-2);
-  opacity: 0.7;
+  /* --rule-2 measured 1.56:1 against the ground, which after the old 0.7
+     opacity was effectively invisible. --ink-3 puts the structure on screen
+     without letting it compete with the name. */
+  color: var(--ink-3);
+  opacity: 0.62;
   pointer-events: none;
 }
 /* The hero web spins itself once, after the loader clears */
@@ -374,6 +377,31 @@ em { font-style: italic; }
   color: var(--ink-3);
   letter-spacing: 0.02em;
   margin-left: auto;
+}
+
+/* Sits in the empty band below the buttons and says there is more down there.
+   --ink-2 rather than --ink-3: a wayfinding cue has to actually be legible. */
+.hero-scroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: clamp(2.25rem, 6vh, 4rem);
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: color .2s ease, gap .2s ease;
+}
+.hero-scroll:hover { color: var(--red); gap: 0.95rem; }
+.hero-scroll-arrow {
+  display: inline-block;
+  font-size: 0.85rem;
+  animation: nudge 2.6s ease-in-out infinite;
+}
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(4px); }
 }
 
 /* ── Buttons ───────────────────────────────────────────────────────────── */
